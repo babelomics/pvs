@@ -1405,14 +1405,21 @@ public class CSVSQueryManager {
         return aux;
     }
 
-    public List<PrsGraphic> getGraphicPRS(String idPgs, String sequencingType, MutableLong count) {
-        List<PrsGraphic> result = new ArrayList<>();
+    public List<PrsGraphic> getGraphicPRS(String idPgs, String sequencingType, List diseases, MutableLong count) {
         Query<PrsGraphic> query = this.datastore.createQuery(PrsGraphic.class);
         if (idPgs != null) {
             query.and(query.criteria("idPgs").equal(idPgs));
         }
         if (sequencingType != null) {
-            query.and(query.criteria("seqType").equal(sequencingType));
+            if (PrsGraphic.EXOME.equals(sequencingType)) {
+                query.and(query.criteria("exome").exists());
+            }
+            if (PrsGraphic.GENOME.equals(sequencingType)) {
+                query.and(query.criteria("genome").exists());
+            }
+        }
+        if (!diseases.isEmpty()) {
+            query.and(query.criteria("gid").in(diseases));
         }
 
         List<PrsGraphic> aux = query.asList();
@@ -1450,6 +1457,21 @@ public class CSVSQueryManager {
     }
 
 
+    /**
+     * Get list diseases with any prs.
+     * @return
+     */
+    public List<DiseaseGroup> getAllDiseasePRS() {
+        List<DiseaseGroup> dgList = this.getAllDiseaseGroups();
+
+        DBCollection dbCollection= this.datastore.getCollection(PrsGraphic.class);
+
+        List<String> diseasesIdPRS = (List) dbCollection.distinct("gid").stream().sorted().collect(Collectors.toList());
+
+        return dgList.stream()
+                .filter(d -> diseasesIdPRS.contains(d.getGroupId()))
+                .collect(Collectors.toList());
+    }
 
 
     class AllVariantsIterable implements Iterable<Variant> {

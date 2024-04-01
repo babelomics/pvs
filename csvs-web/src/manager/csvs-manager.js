@@ -57,6 +57,9 @@ var CSVSManager = {
         graphic: function (args) {
             return CSVSManager._doRequest(args, 'prs', 'graphic');
         },
+        diseases: function (args) {
+            return CSVSManager._doRequest(args, 'prs', 'diseases');
+        },
     },
 
     _url: function (args, api, action) {

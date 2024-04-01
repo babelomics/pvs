@@ -35,6 +35,12 @@
             background-color: #FFFFFF;
             width: calc(100% - 290px);
         }
+        #diseases_div
+        {
+            height: 300px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
     </style>
     <template>
 
@@ -48,6 +54,30 @@
                         <div class="stv-btn stv-btn-shdw flex" id="prsBtnSearch" on-click="submitForm">Search</div>
                     </div>
                     <csvs-filter-prs id="filterPrs"></csvs-filter-prs>
+                    <stv-form-box>
+                        <div class="header horizontal layout flex">
+                            <div>Subpopulations</div>
+                            <div class="flex"></div>
+                            <div on-click="selectAllDiseases" title="Select all subpopulations">
+                                <i class="fa fa-check-square-o check"></i>
+                            </div>
+                            <div on-click="deselectAllDiseases" title="Deselect all subpopulations">
+                                <i class="fa fa-square-o check"></i>
+                            </div>
+                        </div>
+                        <div class="container">
+                            <div id="diseases_div">
+                                <template is="dom-repeat" items="{{diseasesPRS}}">
+                                    <template is="dom-if" if="{{item.samples}}">
+                                        <label class="stv-control">
+                                            <input type="checkbox" class="diseaseName" name="disease" id="disease{{item.groupId}}" value="{{item.groupId}}" checked on-click="updateDiseases"/>
+                                            <span>{{item.name}}</span>
+                                        </label>
+                                    </template>
+                                </template>
+                            </div>
+                        </div>
+                    </stv-form-box>
                 </form>
             </div>
 
@@ -63,9 +93,64 @@
     Polymer({
         is: 'csvs-prs-element',
         properties: {
-
+            diseasesPRS: {
+                type: Array,
+                value: function() {
+                    return [];
+                }
+            },
         },
         ready: function() {
+            this.getDiseasesPRS();
+        },
+
+        getDiseasesPRS: function() {
+            var me = this;
+            CSVSManager.prs.diseases({
+                request: {
+                    async: false,
+                    success: function(response) {
+                        try {
+                            var diseasesPRS = [];
+
+                            var ibsPos = -1;
+                            var mgpPos = -1;
+                            var healthyPos = -1;
+
+                            for (var i = 0; i < response.result.length; i++) {
+                                var elem = response.result[i];
+                                if (elem.name === "IBS (107 Spanish individuals from 1000genomes)") {
+                                    ibsPos = i;
+                                } else if (elem.name === "MGP (267 healthy controls)") {
+                                    mgpPos = i;
+                                } else if (elem.name === "Healthy controls") {
+                                    healthyPos = i;
+                                } else {
+                                    diseasesPRS.push(elem);
+                                }
+                            }
+                            if (healthyPos != -1) {
+                                diseasesPRS.unshift(response.result[healthyPos]);
+                            }
+                            if (ibsPos != -1) {
+                                diseasesPRS.unshift(response.result[ibsPos]);
+                            }
+                            if (mgpPos != -1) {
+                                diseasesPRS.unshift(response.result[mgpPos]);
+                            }
+
+                            me.diseasesPRS = diseasesPRS;
+                        } catch (err) {
+                            console.log("Error loading diseasesPRS: " + err);
+                            me.diseasesPRS = [];
+                        }
+                    },
+                    error: function(response) {
+                        console.log("ERROR downloading diseasesPRS");
+                        console.log(response);
+                    }
+                }
+            });
         },
 
         submitForm: function() {
@@ -76,7 +161,6 @@
             for (var i = 0; i < listPrs.length; i++) {
                 listPrs[i] = listPrs[i].trim();
             }
-
             var listPrs = listPrs.join(",");
 
             var newQuery = {"searchPrs": listPrs,
@@ -90,8 +174,42 @@
 
         clearForm: function() {
             this.$.filterPrs.reset();
+            this.selectAllDiseases();
         },
 
+        deselectAllDiseases: function(e, d, s) {
+            var name = (e != undefined && e.target != undefined && e.target.getAttribute("name") == "CSVS") ? "diseaseNameCSVS": "diseaseName";
+            var checkboxes = this.$.filter_prs_form.getElementsByClassName(name);
+            for (var i = 0; i < checkboxes.length; i++) {
+                var elem = checkboxes[i];
+                elem.checked = false;
+            }
+            this.updateDiseases();
+        },
+        selectAllDiseases: function(e, d, s) {
+            var name = (e != undefined && e.target != undefined && e.target.getAttribute("name") == "CSVS") ? "diseaseNameCSVS": "diseaseName";
+            var checkboxes = this.$.filter_prs_form.getElementsByClassName(name);
+            for (var i = 0; i < checkboxes.length; i++) {
+                var elem = checkboxes[i];
+                elem.checked = true;
+            }
+            this.updateDiseases();
+        },
 
+        updateDiseases: function(){
+            this.$.prsTable.$.prsGraphicElement.isLoading = true;
+            this.$.prsTable.$.prsGraphicElement.diseases = this.getDiseases();
+        },
+        getDiseases: function() {
+            var diseaseIds = [];
+            var diseaseEls = this.$.diseases_div.querySelectorAll(".diseaseName");
+            for (var i = 0; i < diseaseEls.length; i++) {
+                var el = diseaseEls[i];
+                if (el.checked) {
+                    diseaseIds.push(el.getAttribute("value"));
+                }
+            }
+            return diseaseIds;
+        }
     });
 </script>

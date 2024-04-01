@@ -12,26 +12,38 @@
     </style>
     <template>
         <div>
-            <template is="dom-repeat" items="{{columnsPrs}}" as="itemColumn">
-                  <div>
-                      <template is="dom-if" if="{{itemColumn.description}}">
-                        <label class="stv" id="{{itemColumn.name}}_desc" title="{{itemColumn.description}}">{{itemColumn.title}}
-                                <sup><i class="fa fa-info-circle" aria-hidden="true"></i></sup>:</label>
-                      </template>
-                      <template is="dom-if" if="{{!itemColumn.description}}">
-                          <label class="stv" id="{{itemColumn.name}}">{{itemColumn.title}}:</label>
-                      </template>
-                      <label class="{{itemColumn.name}}">
-                          <template is="dom-repeat" items="{{getInfo(itemColumn, itemColumn.name, dataGraphic)}}" as="itemValues">
-                              <template is="dom-if" if="{{itemValues.key}}">
-                                  <br/>
-                                   <label class="stv" style="padding-left: 30px"> {{itemValues.key}}: </label>
-                              </template>
-                              <label class="prsLabel">{{itemValues.value}}</label>
-                          </template>
-                      </label>
-                  </div>
-            </template>
+            <div>
+                <label class="stv" id="idPgs">Polygenic Score ID:</label>
+                <label class="prsLabel">{{idPgs}}</label>
+            </div>
+            <div>
+                <label class="stv" id="normal" title="PRS follows a normal distribution (shapiro test > 0.05)">Normally distributed:<sup><i class="fa fa-info-circle" aria-hidden="true"></i></sup>:</label>
+                <label class="prsLabel">{{getShapiroWilkW(dataGraphic)}}</label>
+            </div>
+            <div>
+                <label class="stv" id="min">Min:</label>
+                <label class="prsLabel">{{getMin(dataGraphic)}}</label>
+            </div>
+            <div>
+                <label class="stv" id="max">Max:</label>
+                <label class="prsLabel">{{getMax(dataGraphic)}}</label>
+            </div>
+            <div>
+                <label class="stv" id="stdDev">Std.dev.:</label>
+                <label class="prsLabel">{{getStdDev(dataGraphic)}}</label>
+            </div>
+            <div>
+                <label class="stv" id="mean">Mean:</label>
+                <label class="prsLabel">{{getMean(dataGraphic)}}</label>
+            </div>
+            <div>
+                <label class="stv" id="deciles">Deciles:</label>
+                    <template is="dom-repeat" items="[1,2,3,4,5,6,7,8,9]" as="itemValue">
+                        <br/>
+                        <label class="stv" style="padding-left: 30px"> decile {{itemValue}}: </label>
+                        <label class="prsLabel">{{getDecile(dataGraphic, itemValue)}}</label>
+                    </template>
+            </div>
         </div>
     </template>
 </dom-module>
@@ -41,68 +53,92 @@
         is: 'csvs-prs-graphic-info',
         properties: {
             dataGraphic: {
-                value: {},
-                type: Object,
-
+                value: [],
+                type: Array,
             },
-            columnsPrs:{
-               value: [],
-                type: Array
+            idPgs:{
+                value: "",
+                type: String
             }
         },
 
-        getInfo: function(itemColumn, name, dataGraphic){
-            if (!!itemColumn.formula ) {
-                return itemColumn.formula(this.formatExpo, this.dataGraphic);
-            } else {
-                return  name in this.dataGraphic ? [{"value": this.dataGraphic[name] }] : [{"value":""}];
-            }
+        formatFixed: function (num, f){
+            return ((Math.round(num * Math.pow(10, f))) / (Math.pow(10, f)).toFixed(f))*1;
         },
 
         formatExpo: function(x, f) {
-            return Number.parseFloat(x).toExponential(f);
-        },
+            if(x != 0){
+                console.log("info num= ",x," numDec=" ,f, "    abs<0.01=", Math.abs(Number.parseFloat(x))  < 0.01, "     final round=", Math.abs(Number.parseFloat(x)) < 0.01 ? Number.parseFloat(x).toExponential(f) :
+                this.formatFixed(Number.parseFloat(x), f))
 
-        reloadDataGraphicInfo: function(){
-            this.columnsPrs = this._columnsPrs;
-        },
-
-        _columnsPrs:[{
-                name: 'idPgs',
-                title: "Polygenic Score ID",
-            }, {
-                name: 'normal',
-                title: 'Normally distributed',
-                description: 'PRS follows a normal distribution (shapiro test > 0.05)'
-            }, {
-                name: 'min',
-                title: 'Min',
-            }, {
-                name: 'max',
-                title: 'Max',
-            }, {
-                name: 'stdDev',
-                title: 'Std.dev.',
-            }, {
-                name: 'mean',
-                title: 'Mean',
-            },{
-                name: 'decile',
-                title: 'Deciles',
-                formula: function(formatExpo, row){
-                    var result = [];
-                    if (!!row.decile){
-                        for (i = 0; i < row.decile.length; i++){
-                            result.push({"key": "decile " + (i+1), "value": formatExpo(row.decile[i], 2)});
-                        }
-                    }
-                    return result;
-                },
+                return Math.abs(Number.parseFloat(x)) < 0.01 ?
+                    Number.parseFloat(x).toExponential(f) :
+                    this.formatFixed(Number.parseFloat(x), f);
+            } else {
+                return 0;
             }
-            ],
+        },
 
-         ready: function() {
-            this.columnsPrs = this._columnsPrs;
+        getShapiroWilkW: function(data) {
+            if (data != null && data.length > 0){
+              //return ShapiroWilkW(data) > 0.05;
+              var probability = ShapiroWilkW(data);
+
+              return probability + " " + (1-probability > 0.05 ? "true" : "false");
+            } else {
+                return "-";
+            }
+        },
+
+        getMin: function(data) {
+            if (data != null && data.length > 0){
+                return  this.formatExpo(Math.min(...data), 3);
+            } else {
+                return "-";
+            }
+        },
+
+        getMax: function(data) {
+            if (data != null && data.length > 0){
+                return this.formatExpo(Math.max(...data), 3);
+            } else {
+                return "-";
+            }
+        },
+
+        getStdDev: function(data) {
+            if (data != null && data.length > 0){
+                const mean = this.getMean(data);
+                return this.formatExpo(Math.sqrt(data.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / data.length), 3);
+            } else {
+                return "-";
+            }
+        },
+
+        getMean: function(data) {
+            if (data != null && data.length > 0){
+                return this.formatExpo(data.reduce((a, b) => a + b) / data.length, 3);
+            } else {
+                return "-";
+            }
+        },
+
+        getDecile: function(data, num){
+            if (data != null && data.length > 0) {
+                const dataSort = data.sort();
+                const pos = (num * (data.length+1)) / 10;
+                const truncPos = Math.trunc(pos);
+                if (truncPos+1 < data.length) {
+                    return this.formatExpo(dataSort[truncPos] + (pos - truncPos) * ( dataSort[truncPos+1] - dataSort[truncPos] ), 3);
+                } else {
+                    return "-";
+                }
+            } else {
+                return "-";
+            }
+        },
+
+        ready: function() {
         },
 
     });

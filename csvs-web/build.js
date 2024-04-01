@@ -59,10 +59,12 @@ async.waterfall([
         shell.cp('-r', path.join(__dirname, 'bower_components', 'backbone'), bp);
         shell.cp('-r', path.join(__dirname, 'bower_components', 'jquery'), bp);
         shell.cp('-r', path.join(__dirname, 'bower_components', 'qtip2'), bp);
-        shell.cp('-r', path.join(__dirname, 'bower_components', 'highcharts-release'), bp);
+        //shell.cp('-r', path.join(__dirname, 'bower_components', 'highcharts-release'), bp);
+        shell.cp('-r', path.join(__dirname, 'bower_components', 'highcharts'), bp);
         shell.cp('-r', path.join(__dirname, 'bower_components', 'cookies-js'), bp);
         shell.cp('-r', path.join(__dirname, 'bower_components', 'crypto-js-evanvosberg'), bp);
         shell.cp('-r', path.join(__dirname, 'bower_components', 'pako'), bp);
+        // GRG Remove to compile
         shell.cp('-r', path.join(__dirname, 'bower_components', 'pdfmake'), bp);
         shell.cp('-r', path.join(__dirname, 'bower_components', 'uri.js'), bp);
 

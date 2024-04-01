@@ -39,6 +39,7 @@
 <link rel="import" href="src/csvs-contributors.html">
 <link rel="import" href="src/variant/csvs-variant-pharmacogenomic.html">
 <link rel="import" href="src/prs/csvs-prs-element.html">
+<script src="src/prs/ShapiroWilkW.js"></script>
 
 <dom-module id="csvs-element">
     <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
@@ -140,11 +141,11 @@
             <csvs-annotation-result id="annotationResult"></csvs-annotation-result>
         </div>
 
-        <div class="content" menu-option="prs">
-            <csvs-prs-element diseases="{{diseases}}" technologies="{{technologies}}" id="csvsPrsElement"></csvs-prs-element>
+        <div class="content" menu-option="pgs">
+            <csvs-prs-element id="csvsPrsElement"></csvs-prs-element>
         </div>
 
-        <div class="content" menu-option="home,search,stats,downloads,annot,result,saturation,prs">
+        <div class="content" menu-option="home,search,stats,downloads,annot,result,saturation,pgs">
             <stv-panel hidden collapsible closable movable id="fileBrowserPanel" on-hidden="handlePanelHidden">
                 <div class="header">
                     <i class="fa fa-folder-open-o"></i> File Browser
@@ -192,9 +193,9 @@
                         <i class="fa fa-download"></i>
                         <span class="option-text">Downloads</span>
                     </div>
-                    <div title="Polygenic Risk Score" class="option" on-click="handleMenuOption" data-option="prs">
+                    <div title="Polygenic Score" class="option" on-click="handleMenuOption" data-option="pgs">
                         <i class="fa fa-area-chart"></i>
-                        <span class="option-text">Prs</span>
+                        <span class="option-text">Pgs</span>
                     </div>
                 </template>
                 <template is="dom-if" if="{{_isNotAccept(acceptTermsCond)}}">
@@ -218,9 +219,9 @@
                         <span class="option-text">Downloads</span>
                     </div>
 
-                    <div title="Polygenic Risk Score" class="option" on-click="handleMenuOption" data-option="prs">
+                    <div title="Polygenic Score" class="option" on-click="handleMenuOption" data-option="pgs">
                         <i class="fa fa-area-chart"></i>
-                        <span class="option-text">Prs</span>
+                        <span class="option-text">Pgs</span>
                     </div>
                 </template>
 

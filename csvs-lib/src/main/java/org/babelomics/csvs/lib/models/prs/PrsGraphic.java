@@ -24,83 +24,16 @@ public class PrsGraphic {
     @Property("idPgs")
     private String idPgs;
 
-    @Property("seqType")
-    private String seqType;
+    @Property("gid")
+    private String gid;
 
-    @Property("plotX")
-    private List<Double> plotX;
+    @Property("exome")
+    private Double exome;
 
-    @Property("plotY")
-    private List<Integer> plotY;
-
-    @Property("isNormal")
-    private Boolean isNormal;
-
-    @Property("min")
-    private Double min;
-
-    @Property("max")
-    private Double max;
-
-    @Embedded("decile")
-    private List<Double> decile;
-
-    @Property("stdDev")
-    private Double stdDev;
-
-    @Property("mean")
-    private Double mean;
-
+    @Property("genome")
+    private Double genome;
 
     public PrsGraphic() {
-    }
-
-    public Boolean getNormal() {
-        return isNormal;
-    }
-
-    public void setNormal(Boolean normal) {
-        isNormal = normal;
-    }
-
-    public Double getMin() {
-        return min;
-    }
-
-    public void setMin(Double min) {
-        this.min = min;
-    }
-
-    public Double getMax() {
-        return max;
-    }
-
-    public void setMax(Double max) {
-        this.max = max;
-    }
-
-    public List<Double> getDecile() {
-        return decile;
-    }
-
-    public void setDecile(List<Double> decile) {
-        this.decile = decile;
-    }
-
-    public Double getStdDev() {
-        return stdDev;
-    }
-
-    public void setStdDev(Double stdDev) {
-        this.stdDev = stdDev;
-    }
-
-    public Double getMean() {
-        return mean;
-    }
-
-    public void setMean(Double mean) {
-        this.mean = mean;
     }
 
     public String getIdPgs() {
@@ -111,43 +44,38 @@ public class PrsGraphic {
         this.idPgs = idPgs;
     }
 
-    public String getSeqType() {
-        return seqType;
+    public String getGid() {
+        return gid;
     }
 
-    public void setSeqType(String seqType) {
-        this.seqType = seqType;
+    public void setGid(String gid) {
+        this.gid = gid;
     }
 
-    public List<Double> getPlotX() {
-        return plotX;
+    public Double getExome() {
+        return exome;
     }
 
-    public void setPlotX(List<Double> plotX) {
-        this.plotX = plotX;
+    public void setExome(Double exome) {
+        this.exome = exome;
     }
 
-    public List<Integer> getPlotY() {
-        return plotY;
+    public Double getGenome() {
+        return genome;
     }
 
-    public void setPlotY(List<Integer> plotY) {
-        this.plotY = plotY;
+    public void setGenome(Double genome) {
+        this.genome = genome;
     }
 
     @Override
     public String toString() {
         return "PrsGraphic{" +
-                "idPgs=" + idPgs +
-                "seqType=" + seqType +
-                "plotX=" +  plotX +
-                "plotY=" + plotY +
-                ", isNormal=" + isNormal +
-                ", min=" + min +
-                ", max=" + max +
-                ", decile=" + decile +
-                ", stdDev=" + stdDev +
-                ", mean=" + mean +
-                "}";
+                "id=" + id +
+                ", idPgs='" + idPgs + '\'' +
+                ", gid='" + gid + '\'' +
+                ", exome=" + exome +
+                ", genome=" + genome +
+                '}';
     }
 }

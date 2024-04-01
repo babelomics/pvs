@@ -6,11 +6,13 @@ import com.wordnik.swagger.annotations.ApiOperation;
 import com.wordnik.swagger.annotations.ApiParam;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableLong;
+import org.babelomics.csvs.lib.models.DiseaseGroup;
 import org.babelomics.csvs.lib.models.Prs;
 import org.babelomics.csvs.lib.models.prs.PrsGraphic;
 import org.babelomics.csvs.lib.ws.QueryResponse;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -94,15 +96,23 @@ public class PRSWSServer extends CSVSWSServer {
     @Produces("application/json")
     @ApiOperation(value = "Get data graphic from prs")
     public Response getPrs(
-            @ApiParam(value = "idPgs") @QueryParam("idPgs") String idPgs,
-            @ApiParam(value = "sequencingType") @QueryParam("sequencingType") String sequencingType
-    ) {
+            @ApiParam(value = "idPgs", required = true) @NotNull @QueryParam("idPgs") String idPgs,
+            @ApiParam(value = "sequencingType") @QueryParam("sequencingType") String sequencingType,
+            @ApiParam(value = "diseases") @QueryParam("diseases") String diseases
+            ) {
         MutableLong count = new MutableLong(-1);
         List<PrsGraphic> prsGraphics = null;
+        List<Integer> diseaseList = new ArrayList<>();
 
         try {
-            prsGraphics = qm.getGraphicPRS( idPgs, sequencingType, count );
-        } catch (Exception e1){
+            if (diseases != null && diseases.length() > 0) {
+                String[] disSplits = diseases.split(",");
+                for (String d : disSplits) {
+                    diseaseList.add(Integer.valueOf(d));
+                }
+            }
+            prsGraphics = qm.getGraphicPRS( idPgs, sequencingType, diseaseList, count );
+        } catch (Exception e1) {
             return  createErrorResponse(e1);
         }
 
@@ -110,7 +120,12 @@ public class PRSWSServer extends CSVSWSServer {
         qr.setNumTotalResults(count.getValue());
 
         qr.addQueryOption("idPgs", idPgs);
-        qr.addQueryOption("sequencingType", sequencingType);
+        if (sequencingType != null) {
+            qr.addQueryOption("sequencingType", sequencingType);
+        }
+        if (diseases != null) {
+            qr.addQueryOption("diseases", diseases);
+        }
 
         return createOkResponse(qr);
     }
@@ -138,5 +153,20 @@ public class PRSWSServer extends CSVSWSServer {
         qr.addQueryOption("ad", ad);
 
         return createOkResponse(qr);
+    }
+
+    @GET
+    @Path("/diseases")
+    @Produces("application/json")
+    @ApiOperation(value = "List diseases")
+    public Response getAllDiseasesPRS() {
+
+        List<DiseaseGroup> res = qm.getAllDiseasePRS();
+
+        QueryResponse qr = createQueryResponse(res);
+        qr.setNumResults(qr.getNumTotalResults());
+
+        return createOkResponse(qr);
+
     }
 }

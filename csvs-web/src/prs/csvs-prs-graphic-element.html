@@ -38,17 +38,22 @@
 
     </style>
     <template>
-        <div >
+        <div hidden$="{{isLoading}}">
             <div id="menuSeqType" class="color-2 color-hover-2 horizontal layout ">
                 <div id="menuSeqTypeG" on-click="handleMenuSeqTypeClick" option="G" selected="" hidden$="{{_hiddenMenu('G')}}">Genome</div>
                 <div id="menuSeqTypeE" on-click="handleMenuSeqTypeClick" option="E" hidden$="{{_hiddenMenu('E')}}">Exome</div>
             </div>
             <div id="divGraphicPrs" class="horizontal layout style-scope" style="display: inline-flex; padding-top: 15px;" hidden$="{{_hiddenMenu('')}}">
-                <csvs-prs-graphic-info id="prsGraphicInfo"></csvs-prs-graphic-info>
+                <csvs-prs-graphic-info  idPgs="{{idPgsSelected}}" id="prsGraphicInfo"></csvs-prs-graphic-info>
                 <div id="chartPrs" class="color-2 color-hover-2 horizontal layout center-justified"></div>
             </div>
             <div id="divGraphicPrsNoData" class="horizontal layout style-scope" style="padding-top: 15px;" hidden$="{{!_hiddenMenu('')}}">
                 No results found.
+            </div>
+        </div>
+        <div hidden$="{{!isLoading}}">
+            <div id="divGraphicLoading" class="color-2 color-hover-2 horizontal layout" style="font-size: 17px;padding: 5px;margin: 20px 20px;">
+                Loading...
             </div>
         </div>
     </template>
@@ -61,6 +66,17 @@
                 type: String,
                 value : "",
                 observer: 'getDataGraphic'
+            },
+            diseases:{
+                type: Array,
+                value: function() {
+                    return [];
+                },
+                observer: 'getDataGraphic'
+            },
+            isLoading:{
+                type: Boolean,
+                value: false
             },
             efosLabels: {
                 type: String,
@@ -87,9 +103,15 @@
 
         _hiddenMenu: function(option){
             var result = true;
-            if (!!this.menuSequencingType && this.menuSequencingType.length > 0){
-                result = option == '' ? false:  (this.getIndexDataGraphic(option) != -1 ? false : true);
-           }
+            if (this.dataGraphic != null) {
+                if (option === "G") {
+                    result = this.dataGraphic.some(dg=>dg.genome != null) ? false : true;
+                }
+
+                if (option === "E") {
+                    result = this.dataGraphic.some(dg=>dg.exome != null) ? false : true;
+                }
+            }
             return result;
         },
 
@@ -113,87 +135,122 @@
             }
         },
 
-       getIndexDataGraphic: function(optionMenu){
-            var index = -1;
-            if (!!this.dataGraphic){
-               index = this.dataGraphic.findIndex(g => g.seqType === optionMenu);
-            }
-            return index;
-       },
+        formatFixed: function (num, f){
+            //console.log("fixed num= ",num," numDec=" ,f, " return = ", ((Math.round(num * Math.pow(10, f))) / (Math.pow(10, f)).toFixed(f))*1);
+            return ((Math.round(num * Math.pow(10, f))) / (Math.pow(10, f)).toFixed(f))*1;
+        },
 
-       getDataGraphicElement:function(){
-            var index = this.getIndexDataGraphic(this.selectedSequencingType);
-            return index != -1 ? this.dataGraphic(index) : [];
-       },
+        formatExpo: function(x, f) {
+            if (x != 0){
+              //  console.log("graphic num= ",x," numDec=" ,f, "    abs<0.01=", Math.abs(Number.parseFloat(x))  < 0.01, "     final round=", Math.abs(Number.parseFloat(x)) < 0.01 ? Number.parseFloat(x).toExponential(f) :
+                this.formatFixed(Number.parseFloat(x), f))
+
+                return Math.abs(Number.parseFloat(x)) < 0.01 ?
+                    Number.parseFloat(x).toExponential(f) :
+                    this.formatFixed(Number.parseFloat(x), f);
+            } else {
+                return 0;
+            }
+        },
 
        reloadChart: function() {
             var data = [];
             var categories = [];
-            var index = this.getIndexDataGraphic(this.selectedSequencingType);
-            if (index != -1){
-                for (var i = 1; i <= this.dataGraphic[index].plotX.length; i++){
-                    categories.push([this.dataGraphic[index].plotX[i-1],this.dataGraphic[index].plotX[i]]);
-                }
-                data = this.dataGraphic[index].plotY;
-                this.$.prsGraphicInfo.dataGraphic = this.dataGraphic[index];
-            } else {
-               this.$.prsGraphicInfo.dataGraphic = {};
-            }
-
+            this.$.prsGraphicInfo.idPgs = this.idPgsSelected;
+            var me = this;
             // Remove selected
             if (this.selectedSequencingType == "G"){
                     this.$.menuSeqType.children.namedItem("menuSeqTypeG").setAttribute("selected", "true");
                     this.$.menuSeqType.children.namedItem("menuSeqTypeE").removeAttribute("selected");
+                    this.$.prsGraphicInfo.dataGraphic = this.dataGraphic.filter(dg=>dg.genome != null).map(dg=>dg.genome);
+                    data = this.dataGraphic.filter(dg=>dg.genome != null).map(dg=>dg.genome)
             }
             if (this.selectedSequencingType == "E"){
                     this.$.menuSeqType.children.namedItem("menuSeqTypeG").removeAttribute("selected");
                     this.$.menuSeqType.children.namedItem("menuSeqTypeE").setAttribute("selected", "true");
+                    this.$.prsGraphicInfo.dataGraphic = this.dataGraphic.filter(dg=>dg.exome != null).map(dg=>dg.exome);
+                    data = this.dataGraphic.filter(dg=>dg.exome != null).map(dg=>dg.exome)
             }
 
-            var title = this.efosLabels;
-            var listColors =  this.selectedSequencingType === "E" ?  ["#90ed7d"] : ["#7cb5ec"];
-            var vpp = new Highcharts.Chart({
-                chart: {
-                    renderTo: this.$.chartPrs,
-                    type: 'column',
-
-                },
-                title: {
-                    text: title
-                },
-                colors: listColors,
-                plotOptions: {
-                     column: {
-                        dataLabels: {
-                            enabled: true
-                        },
+            var listColors =  this.selectedSequencingType === "E" ?  ["#90ed7d",'#363636'] : ["#7cb5ec",'#363636'];
+            if (data.length > 0) {
+                var vpp = new Highcharts.Chart("chartPrs",{
+                    colors: listColors,
+                    plotOptions: {
+                        histogram: {
+                           /* accessibility: {
+                                point: {
+                                    valueDescriptionFormat: '{index}. {point.x:.3f} to {point.x2:.3f}, {point.y}.'
+                                }
+                            },*/
+                            dataLabels: {
+                                enabled: true,
+                            }
+                        }
                     },
-                },
-                tooltip: {
-                    useHTML: true,
-                    formatter: function() {
-                        var point = this.point;
-                        return ' Range: <b>[' + this.x + ']</b><br> Frequency: <b>' + this.y + '</b>';
-                    }
-                },
-                xAxis: {
-                    allowDecimals: true,
-                    categories: categories,
-                    crosshair: true
-                },
-                yAxis: {
-                    title: "",
-                    crosshair: true
-                },
-                series: [{
-                    name: this.selectedSequencingType === "E" ? "Exome" : "Genome",
-                    pointPadding: 0,
-                    groupPadding: 0,
-                    borderWidth: 0,
-                    shadow: false,
-                    data: data
-                }]
-            });
+                    title: {
+                        text: this.efosLabels
+                    },
+                    xAxis: [{
+                        title: { text: '' },
+                        //alignTicks: false,
+                        opposite: true,
+                        visible: false,
+                    }, {
+                        title: { text: '' },
+                       // alignTicks: true,
+                        opposite: false,
+                        startOnTick: false,
+                        endOnTick: false,
+                        tickPositioner: function () {
+                          var positions = [];
+                          for(var x in this.series[0].processedXData){
+                            if (x % 2 == 0 || this.series[0].processedXData.length < 12){
+                               positions.push(me.formatExpo(this.series[0].processedXData[x], 3));
+                            }
+                          }
+                          return positions;
+                        },
+
+                    }],
+                    tooltip: {
+                        formatter: function () {
+                            return ' Range: <b>[' + me.formatExpo(this.point.x, 3) + ',' + me.formatExpo(this.point.x2, 3) + ']</b><br> Frequency: <b>' + this.point.y + '</b>';
+                        },
+                        shared: true,
+                        useHTML: true,
+                    },
+                    yAxis: [{
+                          title: { text: 'Data' },
+                          visible: false,
+                          opposite: true
+                      }, {
+                          title: { text: 'Histogram' },
+                          visible: false
+                      }],
+                    series: [{
+                            name: this.selectedSequencingType === "E" ? "Exome histogram" : "Genome histogram",
+                            type: 'histogram',
+                            xAxis: 1,
+                            yAxis: 1,
+                            baseSeries: 's1',
+                            zIndex: -1,
+                            visible: true,
+                        }, {
+                        name: "Data",
+                        data: data,
+                        type: 'scatter',
+                        id: 's1',
+                        marker: {
+                            radius: 1.5
+                        },
+                        visible: false,
+                        showInLegend: false
+                    }]
+                });
+            }
+
+            this.isLoading = false;
         },
 
 
@@ -213,7 +270,7 @@
 
         getDataGraphic: function() {
             var me = this;
-            var newQuery = this.idPgsSelected != "" ? {"idPgs": this.idPgsSelected,limit:10, skip:0} : {limit:10, skip:0};
+            var newQuery = this.idPgsSelected != "" ? {"idPgs": this.idPgsSelected,limit:10, skip:0, "diseases": this.diseases} : {limit:10, skip:0, "diseases": this.disease};
             if (this.idPgsSelected != ""){
                 CSVSManager.prs.graphic({
                     query: newQuery,
@@ -221,9 +278,14 @@
                         success: function(response) {
                             me.dataGraphic = response.result;
                             var menuSequencingTypeTmp = [];
-                            if ( response.result.length > 0){
-                                response.result.forEach((r)=> menuSequencingTypeTmp.push(r.seqType));
-                                me.selectedSequencingType = me.dataGraphic[0].seqType;
+                            if ( response.result.length > 0) {
+                                if (response.result.findIndex((r)=> r.genome != null) !== -1){
+                                    menuSequencingTypeTmp.push("G");
+                                }
+                                if (response.result.findIndex((r)=> r.exome != null) !== -1){
+                                    menuSequencingTypeTmp.push("E");
+                                }
+                                me.selectedSequencingType = menuSequencingTypeTmp[0];
                             } else {
                                me.selectedSequencingType = "";
                             }

@@ -24,15 +24,24 @@
             width: 1000px;
             background-color: red;
         }
+        .chartContainerElement{
+            margin-top: 20px;
+           // height: 600px;
+           //width: 1000px;
+        }
 
     </style>
     <template>
-
         <div class="vertical layout center-justified">
-            <div id="chartContainer" class="vertical layout center"></div>
-            <div id="techChartContainer" class="vertical layout center"></div>
+            <div id="chartContainer" class="vertical layout center">
+                <div id="variantsDiseaseContainer" class="chartContainerElement"></div>
+                <div id="samplesDiseaseContainer" class="chartContainerElement"></div>
+            </div>
+            <div id="techChartContainer" class="vertical layout center">
+                <div id="variantsTechnologyContainer" class="chartContainerElement"></div>
+                <div id="samplesTechnologyContainer" class="chartContainerElement"></div>
+            </div>
         </div>
-
     </template>
 </dom-module>
 <script>
@@ -57,69 +66,57 @@
         created: function () {
         },
         ready: function () {
-
         },
         diseasesChanged: function (oldValue, newValue) {
-            this.statsPerDisease();
+           this.statsPerDisease();
         },
         technologiesChanged: function (oldValue, newValue){
-            this.statsPerTechnology();
+           this.statsPerTechnology();
         },
-        _createPieChart: function (container, text, data) {
-            if (data.length > 10)
-                container.style.height = "600px";
-            var vpp = new Highcharts.Chart({
+        _createPieChart: function (container, text, data, containerText) {
+
+            let colorsInitial =[
+                   '#058DC7', '#50B432', '#ED561B', '#DDDF00', '#24CBE5', '#64E572','#FF9655', '#FFF263', '#6AF9C4',
+                  ];
+
+            let colors = [];
+            colors.push(...colorsInitial);
+            for (j=0; j<= colorsInitial.length; j++){
+              colors.push(Highcharts.getOptions().colors[j]);
+              for (i=0;i<1; i++){
+                colors.push(Highcharts.color(Highcharts.getOptions().colors[j]).brighten((i - 1) / 7).get());
+                colors.push(Highcharts.color(colorsInitial[j]).brighten((i - 1) / 7).get());
+              }
+            }
+
+            var vpp = new Highcharts.Chart(container,{
                 chart: {
                     plotBackgroundColor: null,
-                    plotBorderWidth: 1,//null,
-                    plotShadow: false,
-                    renderTo: container,
+                    //plotBorderWidth: 1,//null,
+                    //plotShadow: false,
                     borderRadius: 10,
-                    width: 1000
+                    width: 1000,
+                    plotAreaHeight: 200,
+                    height: containerText == "Disease" ? 700 : 400,
+                    marginTop:35,
                 },
-                exporting: {
-                    chartOptions: {
-                    chart: {
-                        height: 1000
-                    },
-                    legend:{
-                            verticalAlign: 'bottom',
-                            itemWidth: 800,
-                            maxHeight: 800,
-                            navigation: {
-                              enabled: false
-                            }
-                        }
-                }},
-                legend: {
-                    y: -10,
-                    verticalAlign: 'bottom',
-                    useHTML: true,
-                    itemWidth: 480,
-                    alignColumns: true,
-                    itemStyle : '{ "word-wrap": "break-word","textOverflow": "ellipsis","max-width":95%}',
-                    labelFormatter: function () {
-                        var maxLength = 60;
-                        var res = this.name;
-                        var control = res.includes("(controls)")? "(controls)":""
-                        return '<div title="'+this.name +  ' : ' + this.y +  '" style="white-space: nowrap; width: 350px;overflow: hidden; text-overflow: ellipsis ">'+ res + ": "  +  this.y + ' </div>';
-                    },
-                },
+
                 title: {
                     text: text
                 },
-                credits: {
-                    enabled: false
-                },
+
                 plotOptions: {
                     pie: {
+                        colors: colors,
+                        showInLegend: true,
                         allowPointSelect: true,
                         cursor: 'pointer',
+                        shadow: false,
                         dataLabels: {
                             enabled: true,
-//                                format: '<b>{point.name}</b>: {point.y:,.0f}',
+//                          format: '<b>{point.name}</b>: {point.y:,.0f}',
                             formatter: function () {
-                                var maxLength =20;
+                                var maxLength = 20;
                                 var res = this.point.name;
                                 var control = res.includes("(controls)")? "(controls)":"";
                                 if (res.length > maxLength) {
@@ -129,68 +126,55 @@
                                     else
                                       res = res.slice(0, maxLength) + '...'+ control ;
                                 }
-
                                 return '<b>' + res + '</b>: ' + this.point.y;
-
-                            },
-                            style: {
-                                color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black',
-                                width: '400px'
-
                             }
                         },
-                        showInLegend: true
-
                     }
+                },
+                legend: {
+                    y: -10,
+                    verticalAlign: 'bottom',
+                    align: containerText == "Disease" ? 'center' : 'left',
+                    useHTML: true,
+                    itemWidth: containerText == "Disease" ? 480 : 100,
+                    alignColumns: true,
+                    //itemStyle : '{ "word-wrap": "break-word","textOverflow": "ellipsis","max-width":95%}',
+                    itemStyle : { "word-wrap": "break-word","textOverflow": "ellipsis"},
+                    labelFormatter: function () {
+                        var maxLength =  60;
+                        var res = this.name;
+                        var control = res.includes("(controls)")? "(controls)":""
+                        return '<div title="'+this.name +  ' : ' + this.y +  '" style="white-space: nowrap; width: 350px;overflow: hidden; text-overflow: ellipsis ">'+ res + ": "  +  this.y + ' </div>';
+                    },
                 },
                 series: [{
                     type: 'pie',
                     name: text,
-                    data: data
-                }
-                ]
+                    data: data,
+
+                }]
             });
         },
-        _createCharts: function (variants, variantsText, samples, samplesText, container) {
 
-            var vppDiv = document.createElement("div");
-            var sppDiv = document.createElement("div");
-
-            vppDiv.style.marginTop = "20px";
-            sppDiv.style.marginTop = "20px";
-
-            this._createPieChart(vppDiv, variantsText, variants);
-            this._createPieChart(sppDiv, samplesText, samples);
-
-            container.appendChild(vppDiv);
-            container.appendChild(sppDiv);
-
-        },
         statsPerDisease: function () {
-            while (this.$.chartContainer.firstChild) {
-                this.$.chartContainer.removeChild(this.$.chartContainer.firstChild);
-            }
-
             var auxVariants = {};
             var auxSamples = {};
             var variants = [];
             var samples = [];
+            if (this.diseases != null) {
+                for (var i = 0; i < this.diseases.length; i++) {
+                    var disease = this.diseases[i];
+                    var name = disease.name;
 
-            for (var i = 0; i < this.diseases.length; i++) {
+                    if (!(name in auxVariants)) {
+                        auxVariants[name] = 0;
+                        auxSamples[name] = 0;
+                    }
 
-                var disease = this.diseases[i];
-                var name = disease.name;
-
-                if (!(name in auxVariants)) {
-                    auxVariants[name] = 0;
-                    auxSamples[name] = 0;
+                    auxVariants[name] += disease.variants;
+                    auxSamples[name] += disease.samples;
                 }
-
-                auxVariants[name] += disease.variants;
-                auxSamples[name] += disease.samples;
-
             }
-
             Object.keys(auxVariants).forEach(function (key) {
                 if (auxSamples[key] > 0) {
                     variants.push({
@@ -209,33 +193,36 @@
                 }
             });
 
+            if (variants.length > 0 || samples.length > 0){
+                try {
+                    this._createPieChart(this.$.variantsDiseaseContainer, "Variants per Disease" , variants, "Disease");
+                    this._createPieChart(this.$.samplesDiseaseContainer, "Samples per Disease", samples, "Disease");
+                } catch(e){
+                    console.log(e);
+                }
+            }
 
-
-            this._createCharts(variants, "Variants per Disease", samples, "Samples per Disease", this.$.chartContainer);
         },
-        statsPerTechnology: function () {
-            while (this.$.techChartContainer.firstChild) {
-                this.$.techChartContainer.removeChild(this.$.techChartContainer.firstChild);
-            }
 
+        statsPerTechnology: function () {
             var auxVariants = {};
             var auxSamples = {};
             var variants = [];
             var samples = [];
+            if (this.technologies != null){
+                for (var i = 0; i < this.technologies.length; i++) {
 
-            for (var i = 0; i < this.technologies.length; i++) {
+                    var technology = this.technologies[i];
+                    var name = technology.name;
 
-                var technology = this.technologies[i];
-                var name = technology.name;
+                    if (!(name in auxVariants)) {
+                        auxVariants[name] = 0;
+                        auxSamples[name] = 0;
+                    }
 
-                if (!(name in auxVariants)) {
-                    auxVariants[name] = 0;
-                    auxSamples[name] = 0;
+                    auxVariants[name] += technology.variants;
+                    auxSamples[name] += technology.samples;
                 }
-
-                auxVariants[name] += technology.variants;
-                auxSamples[name] += technology.samples;
-
             }
 
             Object.keys(auxVariants).forEach(function (key) {
@@ -256,7 +243,15 @@
                 }
             });
 
-            this._createCharts(variants, "Variants per Technology", samples, "Samples per Technology", this.$.techChartContainer);
+            if (variants.length > 0 || samples.length > 0){
+                try {
+                    this._createPieChart(this.$.variantsTechnologyContainer, "Variants per Technology" , variants, "Technology");
+                    this._createPieChart(this.$.samplesTechnologyContainer, "Samples per Technology", samples, "Technology");
+                } catch(e){
+                    console.log(e);
+                }
+
+            }
         },
 
         _formatText: function (text) {

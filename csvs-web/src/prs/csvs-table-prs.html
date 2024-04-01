@@ -39,7 +39,7 @@
         <div class=" ">
             <div>
                 <stv-table id="tablePrs"  request="{{request}}" enable-select enable-resize enable-paging enable-remote
-                       enable-loading  on-rowclick="handleRowClick" page-size="10"></stv-table>
+                           enable-loading  on-rowclick="handleRowClick" page-size="10"></stv-table>
             </div>
             <div>
                 <csvs-prs-graphic-element id="prsGraphicElement" ></csvs-prs-graphic-element>
@@ -52,10 +52,6 @@
     Polymer({
         is: 'csvs-table-prs',
         properties: {
-            data: {
-                value: [],
-                type: Array
-            },
             newQuery:{
                 type: Object,
                 value:{},
@@ -83,6 +79,7 @@
 
         _selectElem: function(response){
             if (response != null && response.result.length > 0 ){
+                this.$.prsGraphicElement.isLoading = true;
                 this.$.tablePrs.selectElem(response.result[0], function(x, y, graphic) {
                         return x.idPgs == y.idPgs;
                     });
@@ -94,7 +91,6 @@
                         response.result[0].efos.forEach(e=> efosLabels.push(e.label));
                 }
                 this.$.prsGraphicElement.efosLabels = efosLabels.join(", ");
-
             }
         },
 
@@ -122,6 +118,7 @@
         },
 
         handleRowClick: function(e) {
+            this.$.prsGraphicElement.isLoading = true;
             this.$.prsGraphicElement.idPgsSelected = e.detail.row.idPgs;
 
             // Add text efosLabels
@@ -131,8 +128,6 @@
             }
             this.$.prsGraphicElement.efosLabels = efosLabels.join(", ");
         },
-
-
 
         _columns:[{
             name: 'idPgs',
@@ -215,7 +210,5 @@
             width: 100,
         }
         ],
-
-
     });
 </script>

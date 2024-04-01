@@ -507,7 +507,7 @@
                                     { name: "intron_variant", impact: "MODIFIER", checked: true, defaultChecked: true, order:23},
                                     { name: "non_coding_transcript_exon_variant", impact: "MODIFIER",checked: true, defaultChecked: true, order:22},
                                     { name: "non_coding_transcript_variant", impact: "MODIFIER", checked: true, defaultChecked: true, order:25}] },
-                                { category: "Slice", ops: [
+                                { category: "Splice", ops: [
                                     { name: "splice_acceptor_variant", impact: "HIGH", checked: true, defaultChecked: true, order:2},
                                     { name: "splice_donor_variant", impact: "HIGH", checked: true, defaultChecked: true, order:3},
                                     { name: "splice_region_variant", impact: "LOW", checked: true, defaultChecked: true, order:13}]},
@@ -819,7 +819,7 @@
         },
 
         initTitleMenu: function() {
-            var list = document.getElementById('columnsMenu').getElementsByTagName("span");
+            var list = document.getElementById('columnsMenu') != null ? document.getElementById('columnsMenu').getElementsByTagName("span") : [];
             // Num colums to modify
             var num_search = 2;
             for (var i = list.length-1; i>0 && num_search>0; i--) {
@@ -851,7 +851,7 @@
                 me.$.gv.genomeViewer.draw();
 
                 this.initTitleMenu();
-            }, 50);
+            }, 1000);
 
             // Load region from request
             if (window.location.search != "" && window.location.search.includes("?regions=")) {
@@ -2553,13 +2553,13 @@
                     counts[i].x += counts[i - 1].x;
                 }
                 for (var i = 0; i < counts.length; i++) {
-
-                    counts[i].radius = counts[i]._count / 5; //1/(counts[i]._count);
-                    counts[i].fillColor = Highcharts.Color(Highcharts.getOptions().colors[chartData.length]).setOpacity(0.7).get('rgba');
-                    if (counts[i].radius > 120) {
-                        counts[i].radius = 120;
-                        counts[i].lineWidth = 5;
-                        counts[i].lineColor = Highcharts.Color('#dddddd').setOpacity(0.7).get('rgba');
+                    counts[i].marker = {enabled: true};
+                    counts[i].marker.radius = counts[i]._count / 5; //1/(counts[i]._count);
+                    counts[i].marker.fillColor = Highcharts.color(Highcharts.getOptions().colors[chartData.length]).setOpacity(0.7).get('rgba');
+                    if (counts[i].marker.radius > 120) {
+                        counts[i].marker.radius = 120;
+                        counts[i].marker.lineWidth = 5;
+                        counts[i].marker.lineColor = Highcharts.color('#dddddd').setOpacity(0.7).get('rgba');
                     }
                 }
 
@@ -2576,9 +2576,9 @@
                     name: key,
                     data: counts
                 });
-
-
             }
+
+            //console.log(chartData);
 
             me.$.tvSaturation.dataSaturation=chartData;
 

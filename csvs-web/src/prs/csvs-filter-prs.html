@@ -37,8 +37,8 @@
         }
 
         #filterPrs_div{
-            height: 600px;
-            max-height: 600px;
+            height: 400px;
+            max-height: 400px;
             width: 225px;
             overflow-y: auto;
         }
@@ -61,7 +61,7 @@
     <template>
         <stv-form-box collapsible$="{{collapsible}}" collapsed$="{{collapsed}}">
             <div class="header horizontal layout flex">
-                <div> Polygenic Risk Score </div>
+                <div> Polygenic Score </div>
                 <div class="flex"></div>
                 <div on-click="selectAllAncestries" title="Select all">
                     <i class="fa fa-check-square-o check"></i>
@@ -226,10 +226,11 @@
         .titleCategory{
             background-color: #f0f0f0;
         }
+
     </style>
     <template>
         <div>
-            <label class="stv">PRS id / Trait / Description:</label>
+            <label class="stv">PGS id / Trait / Description:</label>
             <textarea class="stv searchPrs" id="searchPrs" name="searchPrs" placeholder="PGS000001" value="{{prsValue::change}}" rows="3">
             </textarea>
         </div>
@@ -273,7 +274,6 @@
                     notify: true,
                     value: ''
                   },
-
                  ancestry: {
                     type: Object,
                     value:{}
@@ -300,8 +300,6 @@
                 e.stopPropagation();
             },
 
-
-
         checkPrs: function(){
             var prsQuery = this.$.searchPrs.value.toUpperCase().replace(/\n/gi, ',');
             if (prsQuery != '') {
@@ -323,7 +321,6 @@
 
             return result;
        },
-
     });
     </script>
 </dom-module>
