@@ -1,0 +1,178 @@
+<!--link rel="import" href="../bower_components/polymer/polymer.html"-->
+
+<dom-module name="csvs-prs-subpopulations">
+    <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
+        :host {
+            display: block;
+            position: relative;
+        }
+        .prsLabel{
+            font-size: 13px;
+        }
+        #diseases_div{
+            height: 345px;
+            max-height: 345px;
+            width: 235px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+   }
+    </style>
+    <template>
+        <form class="vertical layout" id="filter_prs_subpopulation" style="align-items: center;">
+
+        <div class="horizontal layout">
+            <div id="filter-subpopulation">
+                    <stv-form-box>
+                        <div class="header horizontal layout flex">
+                            <div>ICD10 Subpopulations</div>
+                            <div class="flex"></div>
+                            <div on-click="selectAllDiseases" title="Select all subpopulations">
+                                <i class="fa fa-check-square-o check"></i>
+                            </div>
+                            <div on-click="deselectAllDiseases" title="Deselect all subpopulations">
+                                <i class="fa fa-square-o check"></i>
+                            </div>
+                        </div>
+                        <div class="container">
+                            <div id="diseases_div">
+                                <template is="dom-repeat" items="{{diseasesPRS}}">
+                                    <template is="dom-if" if="{{item.samples}}">
+                                        <label class="stv-control">
+                                            <input type="checkbox" class="diseaseName" name="disease" id="disease{{item.groupId}}" value="{{item.groupId}}" checked$="{{isCheckedDefault(item.groupId)}}" on-click="updateDiseases"/>
+                                            <span>{{item.name}}</span>
+                                        </label>
+                                    </template>
+                                </template>
+                            </div>
+                        </div>
+                    </stv-form-box>
+
+            </div>
+        </div>
+            <div class="stv-btn stv-btn-shdw flex style-scope csvs-prs-element" on-click="reset">
+                Clear
+            </div>
+        </form>
+    </template>
+</dom-module>
+<script>
+    Polymer({
+        is: 'csvs-prs-subpopulations',
+        properties: {
+            diseasesPRS: {
+                type: Array,
+                value: function() {
+                    return [];
+                }
+            },
+        },
+        ready: function() {
+            this.getDiseasesPRS();
+        },
+
+        getDiseasesPRS: function() {
+            var me = this;
+            CSVSManager.prs.diseases({
+                request: {
+                    async: false,
+                    success: function(response) {
+                        try {
+                            var diseasesPRS = [];
+
+                            var ibsPos = -1;
+                            var mgpPos = -1;
+                            var healthyPos = -1;
+
+                            for (var i = 0; i < response.result.length; i++) {
+                                var elem = response.result[i];
+                                if (elem.name === "IBS (107 Spanish individuals from 1000genomes)") {
+                                    ibsPos = i;
+                                } else if (elem.name === "MGP (267 healthy controls)") {
+                                    mgpPos = i;
+                                } else if (elem.name === "Healthy controls") {
+                                    healthyPos = i;
+                                } else {
+                                    diseasesPRS.push(elem);
+                                }
+                            }
+                            if (healthyPos != -1) {
+                                diseasesPRS.unshift(response.result[healthyPos]);
+                            }
+                            if (ibsPos != -1) {
+                                diseasesPRS.unshift(response.result[ibsPos]);
+                            }
+                            if (mgpPos != -1) {
+                                diseasesPRS.unshift(response.result[mgpPos]);
+                            }
+
+                            me.diseasesPRS = diseasesPRS;
+                        } catch (err) {
+                            console.log("Error loading diseasesPRS: " + err);
+                            me.diseasesPRS = [];
+                        }
+                    },
+                    error: function(response) {
+                        console.log("ERROR downloading diseasesPRS");
+                        console.log(response);
+                    }
+                }
+            });
+        },
+
+        deselectAllDiseases: function(e, d, s) {
+            var name = (e != undefined && e.target != undefined && e.target.getAttribute("name") == "CSVS") ? "diseaseNameCSVS": "diseaseName";
+            var checkboxes = this.$.filter_prs_subpopulation.getElementsByClassName(name);
+            for (var i = 0; i < checkboxes.length; i++) {
+                var elem = checkboxes[i];
+                elem.checked = false;
+            }
+            this.updateDiseases();
+        },
+        selectAllDiseases: function(e, d, s) {
+            var name = (e != undefined && e.target != undefined && e.target.getAttribute("name") == "CSVS") ? "diseaseNameCSVS": "diseaseName";
+            var checkboxes = this.$.filter_prs_subpopulation.getElementsByClassName(name);
+            for (var i = 0; i < checkboxes.length; i++) {
+                var elem = checkboxes[i];
+                elem.checked = true;
+            }
+            this.updateDiseases();
+        },
+
+        updateDiseases: function(){
+            document.getElementById("prsGraphicElement").isLoading = true;
+            document.getElementById("prsGraphicElement").diseases = this.getDiseases();
+            //this.$.prsTable.$.prsGraphicElement.isLoading = true;
+            //this.$.prsTable.$.prsGraphicElement.diseases = this.getDiseases();
+        },
+
+        getDiseases: function() {
+            var diseaseIds = [];
+            var diseaseEls = this.$.diseases_div.querySelectorAll(".diseaseName");
+            for (var i = 0; i < diseaseEls.length; i++) {
+                var el = diseaseEls[i];
+                if (el.checked) {
+                    diseaseIds.push(el.getAttribute("value"));
+                }
+            }
+            return diseaseIds;
+        },
+
+        isCheckedDefault: function(groupId){
+                return groupId > 22;
+        },
+
+        reset: function(){
+            var diseaseEls = this.$.diseases_div.querySelectorAll(".diseaseName");
+            for (var i = 0; i < diseaseEls.length; i++) {
+                var el = diseaseEls[i];
+                if (this.isCheckedDefault(el.value)) {
+                    el.checked = true;
+                } else {
+                    el.checked = false;
+                }
+            }
+
+        }
+    });
+</script>

@@ -54,7 +54,7 @@
         properties: {
             newQuery:{
                 type: Object,
-                value:{},
+                value: null,
                 observer: "updateQuery"
             }
         },
@@ -78,11 +78,17 @@
         },
 
         _selectElem: function(response){
+            this.$.prsGraphicElement.selectedSequencingType = null;
+
             if (response != null && response.result.length > 0 ){
                 this.$.prsGraphicElement.isLoading = true;
+
                 this.$.tablePrs.selectElem(response.result[0], function(x, y, graphic) {
                         return x.idPgs == y.idPgs;
                     });
+                if (this.$.prsGraphicElement.idPgsSelected == response.result[0].idPgs) {
+                    this.$.prsGraphicElement.idPgsSelected = null;
+                }
                 this.$.prsGraphicElement.idPgsSelected = response.result[0].idPgs;
 
                 // Add text efosLabels
@@ -91,13 +97,22 @@
                         response.result[0].efos.forEach(e=> efosLabels.push(e.label));
                 }
                 this.$.prsGraphicElement.efosLabels = efosLabels.join(", ");
+            } else {
+                this.$.prsGraphicElement.idPgsSelected = null;
             }
         },
 
         updateQuery: function() {
             var me = this;
+            var query = this.newQuery == null ?
+                {
+                   "adSources":"European,Hispanic or Latin American,Multi-ancestry (including European),Not Reported",
+                   "adListPgs":"European,Hispanic or Latin American,Multi-ancestry (including European),Not Reported",
+                   "adScores":"European,Multi-ancestry (including European),Not Reported"
+                } : this.newQuery;
+
             var url = CSVSManager.prs.fetch({
-                        query: this.newQuery,
+                        query: query,
                         request: {
                             url: true
                         }
@@ -119,6 +134,9 @@
 
         handleRowClick: function(e) {
             this.$.prsGraphicElement.isLoading = true;
+            if (e.detail.row.idPgs == this.$.prsGraphicElement.idPgsSelected){
+                this.$.prsGraphicElement.idPgsSelected = null;
+            }
             this.$.prsGraphicElement.idPgsSelected = e.detail.row.idPgs;
 
             // Add text efosLabels

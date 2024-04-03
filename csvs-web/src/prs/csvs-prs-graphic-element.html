@@ -1,6 +1,7 @@
 <!--link rel="import" href="../bower_components/polymer/polymer.html"-->
 <!--link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html"-->
 <link rel="import" href="./csvs-prs-graphic-info.html">
+<link rel="import" href="./csvs-prs-subpopulations.html">
 
 <dom-module name="csvs-prs-graphic-element">
     <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
@@ -38,22 +39,28 @@
 
     </style>
     <template>
-        <div hidden$="{{isLoading}}">
-            <div id="menuSeqType" class="color-2 color-hover-2 horizontal layout ">
-                <div id="menuSeqTypeG" on-click="handleMenuSeqTypeClick" option="G" selected="" hidden$="{{_hiddenMenu('G')}}">Genome</div>
-                <div id="menuSeqTypeE" on-click="handleMenuSeqTypeClick" option="E" hidden$="{{_hiddenMenu('E')}}">Exome</div>
+        <div id="contentGraphic" class="color-2 color-hover-2 horizontal layout ">
+            <div hidden$="{{isLoading}}">
+                <div id="menuSeqType" class="color-2 color-hover-2 horizontal layout ">
+                    <div id="menuSeqTypeG" on-click="handleMenuSeqTypeClick" option="G" selected="" hidden$="{{_hiddenMenu('G')}}">Genome</div>
+                    <div id="menuSeqTypeE" on-click="handleMenuSeqTypeClick" option="E" hidden$="{{_hiddenMenu('E')}}">Exome</div>
+                </div>
+                <div id="divGraphicPrs" class="horizontal layout style-scope" style="display: inline-flex; padding-top: 15px;" hidden$="{{_hiddenMenu('')}}">
+                    <csvs-prs-graphic-info  idPgs="{{idPgsSelected}}" id="prsGraphicInfo"></csvs-prs-graphic-info>
+                    <div id="chartPrs" class="color-2 color-hover-2 horizontal layout center-justified"></div>
+                </div>
+                <div id="divGraphicPrsNoData" class="horizontal layout style-scope" style="padding-top: 15px;" hidden$="{{!_hiddenMenu('')}}">
+                    No results found.
+                </div>
             </div>
-            <div id="divGraphicPrs" class="horizontal layout style-scope" style="display: inline-flex; padding-top: 15px;" hidden$="{{_hiddenMenu('')}}">
-                <csvs-prs-graphic-info  idPgs="{{idPgsSelected}}" id="prsGraphicInfo"></csvs-prs-graphic-info>
-                <div id="chartPrs" class="color-2 color-hover-2 horizontal layout center-justified"></div>
+            <div hidden$="{{!isLoading}}" style="min-wid">
+                <div id="divGraphicLoading" class="color-2 color-hover-2 horizontal layout" style="font-size: 17px;padding: 5px;margin: 20px 20px;">
+                    Loading...
+                </div>
             </div>
-            <div id="divGraphicPrsNoData" class="horizontal layout style-scope" style="padding-top: 15px;" hidden$="{{!_hiddenMenu('')}}">
-                No results found.
-            </div>
-        </div>
-        <div hidden$="{{!isLoading}}">
-            <div id="divGraphicLoading" class="color-2 color-hover-2 horizontal layout" style="font-size: 17px;padding: 5px;margin: 20px 20px;">
-                Loading...
+
+            <div style="right: 0;position: absolute;" >
+                <csvs-prs-subpopulations id="prsSubpopulations"></csvs-prs-subpopulations>
             </div>
         </div>
     </template>
@@ -101,6 +108,7 @@
         ready: function() {
         },
 
+
         _hiddenMenu: function(option){
             var result = true;
             if (this.dataGraphic != null) {
@@ -117,6 +125,7 @@
 
         reloadMenu: function(){
             this.$.divGraphicPrs.setAttribute("hidden", "true");
+            this.$.prsSubpopulations.setAttribute("hidden", "true");
             this.$.divGraphicPrsNoData.removeAttribute("hidden");
             // Remove hidden
             if (this._hiddenMenu("G")){
@@ -124,6 +133,7 @@
             } else {
                     this.$.menuSeqTypeG.removeAttribute("hidden");
                     this.$.divGraphicPrs.removeAttribute("hidden");
+                    this.$.prsSubpopulations.removeAttribute("hidden");
                     this.$.divGraphicPrsNoData.setAttribute("hidden", "true");
             }
             if (this._hiddenMenu("E")){
@@ -131,20 +141,17 @@
             } else {
                     this.$.menuSeqTypeE.removeAttribute("hidden");
                     this.$.divGraphicPrs.removeAttribute("hidden");
+                    this.$.prsSubpopulations.removeAttribute("hidden");
                     this.$.divGraphicPrsNoData.setAttribute("hidden", "true");
             }
         },
 
         formatFixed: function (num, f){
-            //console.log("fixed num= ",num," numDec=" ,f, " return = ", ((Math.round(num * Math.pow(10, f))) / (Math.pow(10, f)).toFixed(f))*1);
             return ((Math.round(num * Math.pow(10, f))) / (Math.pow(10, f)).toFixed(f))*1;
         },
 
         formatExpo: function(x, f) {
             if (x != 0){
-              //  console.log("graphic num= ",x," numDec=" ,f, "    abs<0.01=", Math.abs(Number.parseFloat(x))  < 0.01, "     final round=", Math.abs(Number.parseFloat(x)) < 0.01 ? Number.parseFloat(x).toExponential(f) :
-                this.formatFixed(Number.parseFloat(x), f))
-
                 return Math.abs(Number.parseFloat(x)) < 0.01 ?
                     Number.parseFloat(x).toExponential(f) :
                     this.formatFixed(Number.parseFloat(x), f);
@@ -271,7 +278,7 @@
         getDataGraphic: function() {
             var me = this;
             var newQuery = this.idPgsSelected != "" ? {"idPgs": this.idPgsSelected,limit:10, skip:0, "diseases": this.diseases} : {limit:10, skip:0, "diseases": this.disease};
-            if (this.idPgsSelected != ""){
+            if (this.idPgsSelected != "" && this.idPgsSelected != null){
                 CSVSManager.prs.graphic({
                     query: newQuery,
                     request: {
@@ -299,6 +306,9 @@
                         }
                     }
                 });
+            } else {
+                me.dataGraphic = [];
+                me.menuSequencingType = [];
             }
         },
     });

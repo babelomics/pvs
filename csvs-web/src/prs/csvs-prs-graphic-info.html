@@ -17,10 +17,6 @@
                 <label class="prsLabel">{{idPgs}}</label>
             </div>
             <div>
-                <label class="stv" id="normal" title="PRS follows a normal distribution (shapiro test > 0.05)">Normally distributed:<sup><i class="fa fa-info-circle" aria-hidden="true"></i></sup>:</label>
-                <label class="prsLabel">{{getShapiroWilkW(dataGraphic)}}</label>
-            </div>
-            <div>
                 <label class="stv" id="min">Min:</label>
                 <label class="prsLabel">{{getMin(dataGraphic)}}</label>
             </div>
@@ -68,25 +64,11 @@
 
         formatExpo: function(x, f) {
             if(x != 0){
-                console.log("info num= ",x," numDec=" ,f, "    abs<0.01=", Math.abs(Number.parseFloat(x))  < 0.01, "     final round=", Math.abs(Number.parseFloat(x)) < 0.01 ? Number.parseFloat(x).toExponential(f) :
-                this.formatFixed(Number.parseFloat(x), f))
-
                 return Math.abs(Number.parseFloat(x)) < 0.01 ?
                     Number.parseFloat(x).toExponential(f) :
                     this.formatFixed(Number.parseFloat(x), f);
             } else {
                 return 0;
-            }
-        },
-
-        getShapiroWilkW: function(data) {
-            if (data != null && data.length > 0){
-              //return ShapiroWilkW(data) > 0.05;
-              var probability = ShapiroWilkW(data);
-
-              return probability + " " + (1-probability > 0.05 ? "true" : "false");
-            } else {
-                return "-";
             }
         },
 

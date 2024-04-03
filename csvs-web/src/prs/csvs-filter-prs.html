@@ -37,10 +37,11 @@
         }
 
         #filterPrs_div{
-            height: 400px;
-            max-height: 400px;
-            width: 225px;
+            height: 690px;
+            max-height: 690px;
+            width: 235px;
             overflow-y: auto;
+            overflow-x: hidden;
         }
 
         .check {
@@ -171,7 +172,11 @@
             reset: function(){
                 var checkboxes = this.getElementsByClassName("ancestryName");
                 for (var i = 0; i < checkboxes.length; i++) {
+                    if(this.$.filterPrs.isCheckedDefault(checkboxes[i].value)){
                         checkboxes[i].checked = true;
+                    } else {
+                       checkboxes[i].checked = false;
+                    }
                 }
                 this.$.filterPrs.$.searchPrs.value = "";
             }
@@ -255,7 +260,7 @@
                         <template is="dom-repeat" items={{itemAncestry.ops}} as="ops">
                             <div style="padding-left: 15px">
                                 <label class="stv-control">
-                                    <input type="checkbox"  class="ancestryName" name="{{itemAncestry.key}}"  value="{{ops.name}}" checked />
+                                    <input type="checkbox"  class="ancestryName" name="{{itemAncestry.key}}"  value="{{ops.name}}" checked$="{{isCheckedDefault(ops.name)}}"/>
                                     <span style="width: 200px; word-break:break-word" title="{{ops.name}}">{{ops.name}}</span>
                                 </label>
                             </div>
@@ -300,27 +305,33 @@
                 e.stopPropagation();
             },
 
-        checkPrs: function(){
-            var prsQuery = this.$.searchPrs.value.toUpperCase().replace(/\n/gi, ',');
-            if (prsQuery != '') {
-                return prsQuery;
-            } else {
-                return null;
-            }
-       },
+            checkPrs: function(){
+                var prsQuery = this.$.searchPrs.value.toUpperCase().replace(/\n/gi, ',');
+                if (prsQuery != '') {
+                    return prsQuery;
+                } else {
+                    return null;
+                }
+            },
 
-       getSelectedAncestry: function(category){
-            var result = [];
-            var checkboxes = this.getElementsByClassName("ancestryName");
-            for (var i = 0; i < checkboxes.length; i++) {
-                var elem = checkboxes[i];
-                if ( elem.checked && elem.name === category){
-                   result.push(elem.value);
-                   }
-            }
+           getSelectedAncestry: function(category){
+                var result = [];
+                var checkboxes = this.getElementsByClassName("ancestryName");
+                for (var i = 0; i < checkboxes.length; i++) {
+                    var elem = checkboxes[i];
+                    if ( elem.checked && elem.name === category){
+                       result.push(elem.value);
+                       }
+                }
 
-            return result;
-       },
+                return result;
+           },
+
+           isCheckedDefault: function(ancestryName){
+                const defaultSelect=["European", "Hispanic or Latin American", "Multi-ancestry (including European)","Not Reported"];
+                const index = defaultSelect.findIndex((ds) => ancestryName == ds);
+                return index > -1;
+           }
     });
     </script>
 </dom-module>

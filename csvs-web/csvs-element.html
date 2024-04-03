@@ -39,7 +39,6 @@
 <link rel="import" href="src/csvs-contributors.html">
 <link rel="import" href="src/variant/csvs-variant-pharmacogenomic.html">
 <link rel="import" href="src/prs/csvs-prs-element.html">
-<script src="src/prs/ShapiroWilkW.js"></script>
 
 <dom-module id="csvs-element">
     <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
@@ -195,7 +194,7 @@
                     </div>
                     <div title="Polygenic Score" class="option" on-click="handleMenuOption" data-option="pgs">
                         <i class="fa fa-area-chart"></i>
-                        <span class="option-text">Pgs</span>
+                        <span class="option-text">PGS</span>
                     </div>
                 </template>
                 <template is="dom-if" if="{{_isNotAccept(acceptTermsCond)}}">
@@ -221,7 +220,7 @@
 
                     <div title="Polygenic Score" class="option" on-click="handleMenuOption" data-option="pgs">
                         <i class="fa fa-area-chart"></i>
-                        <span class="option-text">Pgs</span>
+                        <span class="option-text">PGS</span>
                     </div>
                 </template>
 
