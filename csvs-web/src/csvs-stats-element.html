@@ -112,11 +112,14 @@
                         allowPointSelect: true,
                         cursor: 'pointer',
                         shadow: false,
+                        distance: '20%',
                         dataLabels: {
+                            useHTML:true,
+                            shadow: false,
                             enabled: true,
-//                          format: '<b>{point.name}</b>: {point.y:,.0f}',
+//                          format: '{point.name}: {point.y:,.0f}',
                             formatter: function () {
-                                var maxLength = 20;
+                                var maxLength = 30;
                                 var res = this.point.name;
                                 var control = res.includes("(controls)")? "(controls)":"";
                                 if (res.length > maxLength) {
@@ -126,7 +129,7 @@
                                     else
                                       res = res.slice(0, maxLength) + '...'+ control ;
                                 }
-                                return '<b>' + res + '</b>: ' + this.point.y;
+                                return  res + ': ' + this.point.y ;
                             }
                         },
                     }

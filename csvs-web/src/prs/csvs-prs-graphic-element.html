@@ -34,13 +34,13 @@
         }
 
         #prsGraphicInfo{
-             padding: 0px 40px;
+             padding: 0px 20px;
         }
 
     </style>
     <template>
         <div id="contentGraphic" class="color-2 color-hover-2 horizontal layout ">
-            <div hidden$="{{isLoading}}">
+            <div hidden$="{{isLoading}}" style="width: 100%">
                 <div id="menuSeqType" class="color-2 color-hover-2 horizontal layout ">
                     <div id="menuSeqTypeG" on-click="handleMenuSeqTypeClick" option="G" selected="" hidden$="{{_hiddenMenu('G')}}">Genome</div>
                     <div id="menuSeqTypeE" on-click="handleMenuSeqTypeClick" option="E" hidden$="{{_hiddenMenu('E')}}">Exome</div>
@@ -53,13 +53,13 @@
                     No results found.
                 </div>
             </div>
-            <div hidden$="{{!isLoading}}" style="min-wid">
+            <div hidden$="{{!isLoading}}" style="width: 100%">
                 <div id="divGraphicLoading" class="color-2 color-hover-2 horizontal layout" style="font-size: 17px;padding: 5px;margin: 20px 20px;">
                     Loading...
                 </div>
             </div>
 
-            <div style="right: 0;position: absolute;" >
+            <div>
                 <csvs-prs-subpopulations id="prsSubpopulations"></csvs-prs-subpopulations>
             </div>
         </div>
