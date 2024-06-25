@@ -1,0 +1,235 @@
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="./csvs-methylation-graphic-info.html">
+
+<dom-module name="csvs-methylation-graphic-element">
+    <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
+        :host {
+            display: block;
+            width: 100%;
+            background-color: var(--text-primary-color);
+            color: var(--primary-text-color);
+        }
+
+        #menuSeqType {
+            margin-top: 15px;
+        }
+
+        #menuSeqType> div {
+            font-size: 17px;
+            padding: 5px;
+            margin: 0 20px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.1s;
+            cursor: pointer;
+        }
+
+        #menuSeqType> div:hover {
+            border-bottom-color: rgba(125, 125, 125, 0.4);
+        }
+
+        #menuSeqType> div[selected] {
+            border-bottom-color: rgba(125, 125, 125, 0.7);
+        }
+
+        .methGraphicInfo{
+             padding: 0px 20px;
+             min-width: 200px;
+        }
+
+    </style>
+    <template>
+        <div id="contentGraphic" class="color-2 color-hover-2 horizontal layout" style="min-width: 400px; max-width: 600px" >
+            <div hidden$="{{!isEmpty}}" style="padding:20px 50px;white-space: nowrap; ">
+                No results found.
+            </div>
+            <div hidden$="{{isEmpty}}" style="width: 100%">
+                <div hidden$="{{!isLoading}}" style="padding:20px 50px;white-space: nowrap; ">
+                   Loading...
+                </div>
+                <div id="divGraphicMethylation" class="horizontal layout style-scope" style="display: inline-flex; padding-top: 15px;" hidden$="{{_hiddenMenu('')}}">
+                    <csvs-methylation-graphic-info id="methGraphicInfo" class="methGraphicInfo" diseasesText="Subpopulations"></csvs-methylation-graphic-info>
+                    <csvs-methylation-graphic-info id="methGraphicHealthyInfo" class="methGraphicInfo" diseasesText="Healthy controls"></csvs-methylation-graphic-info>
+                    <div id="chartMethylation" class="color-2 color-hover-2 horizontal layout center-justified"></div>
+                </div>
+
+            </div>
+        </div>
+    </template>
+</dom-module>
+<script>
+    Polymer({
+        is: 'csvs-methylation-graphic-element',
+        properties: {
+            data:{
+                type: Object,
+                observer: 'getDataGraphic'
+            },
+            filters:{
+                type: Object
+            },
+            isEmpty: {
+                value: true,
+                type: Boolean
+            },
+            isLoading:{
+                type: Boolean,
+                value: false
+            },
+            dataGraphic:{
+                type: Array,
+                value: []
+            },
+            dataHealthyGraphic:{
+                type: Array,
+                value: []
+            },
+        },
+
+        ready: function() {
+            //this.getDataGraphic();
+        },
+        formatFixed: function (num, f){
+            return ((Math.round(num * Math.pow(10, f))) / (Math.pow(10, f)).toFixed(f))*1;
+        },
+
+        getPercentile: function(data, percentile) {
+          data.sort((a,b) => a - b);
+          var index = (percentile / 100) * data.length;
+          var result;
+          if (Math.floor(index) == index) {
+            result = (data[(index - 1)] + data[index]) / 2;
+          } else {
+            result = data[Math.floor(index)];
+          }
+          return result;
+        },
+
+       reloadChart: function() {
+            var typeChart = 'scatter';
+            var me = this;
+
+            // Get avg
+            let sum = 0;
+            this.dataHealthyGraphic.forEach(d => sum += d);
+            let averageData = sum / this.dataHealthyGraphic.length;
+
+            let finalData = {};
+            finalData.subpopulations = [...this.dataGraphic.map(x => [0, x])];
+            finalData.healthy = [...this.dataHealthyGraphic.map(x => [1, x])];
+            console.log(finalData);
+            if (this.dataGraphic.length > 0) {
+                me.isEmpty = false;
+                var cM = new Highcharts.Chart(me.$.chartMethylation,{
+                    chart: {
+                        type: typeChart,
+                        height: 400
+                    },
+                    legend: {
+                        enabled: false
+                    },
+                    title: {
+                            text: this.data.chromosome + ":" + this.data.position
+                    },
+                    yAxis: {
+                        title: {
+                            text: ''
+                        },
+                         plotLines: [{
+                          value: averageData,
+                          color: 'red',
+                          align: 'right',
+                          width: 1,
+                          label: {
+                            text: 'healthy avg ' + averageData.toFixed(3),
+                            verticalAlign: "bottom",
+                          }
+                        }]
+                    },
+                    xAxis: {
+                         categories:["Subpopulations", "Healthy controls"],
+                    },
+                    plotOptions: {
+                        scatter: {
+                            showInLegend: false,
+                            jitter: {
+                                x: 0.24,
+                                y: 0
+                            },
+                            marker: {
+                                radius: 3,
+                                symbol: 'circle'
+                            },
+                            tooltip: {
+                                pointFormat: 'Measurement: {point.y:.3f}'
+                            }
+                        }
+                    },
+                    series: [{
+                        name: 'Subpopulations',
+                        data:  finalData.subpopulations,
+                    },{
+                        name: 'Healthy controls',
+                        data: finalData.healthy,
+                        color: 'green'
+                    }]
+                });
+            } else {
+                me.isEmpty = true;
+            }
+
+            me.isLoading = false;
+        },
+
+        getDataGraphic: function() {
+            if (this.data != null){
+                var me = this;
+                var newQuery = Object.assign({}, this.filters);
+                if ( this.data != undefined && this.data.start != undefined) {
+                    newQuery.regions = this.data.chromosome+":"+this.data.start+"-"+this.data.end;
+                } else {
+                     newQuery.regions = this.data.chromosome+":"+this.data.position+"-"+this.data.position;
+                }
+
+                let healthyQuery = Object.assign({}, newQuery);
+                healthyQuery.diseases = "26";
+                CSVSManager.methylation.fetch({
+                        query:  healthyQuery,
+                        request: {
+                            success: function(response) {
+                                try {
+                                    me.dataHealthyGraphic = response.result != null ? response.result.map(d=> parseFloat(d.value)) : [];
+                                    me.$.methGraphicHealthyInfo.diseasesText= "Healthy controls";
+                                    me.$.methGraphicHealthyInfo.dataGraphic = me.dataHealthyGraphic;
+                                    me.reloadChart();
+                                } catch (e) {
+                                    console.log(e);
+                                }
+                            },
+                            error: function(response){
+                                console.log(response);
+                            }
+                        }
+                });
+
+                CSVSManager.methylation.fetch({
+                        query: newQuery,
+                        request: {
+                            success: function(response) {
+                            try {
+                                   me.dataGraphic = response.result != null ? response.result.map(d=> parseFloat(d.value)) : [];
+                                   me.$.methGraphicInfo.diseasesText= "Subpopulations";
+                                   me.$.methGraphicInfo.dataGraphic = me.dataGraphic;
+                                   me.reloadChart();
+                                } catch (e) {
+                                    console.log(e);
+                                }
+                            },
+                            error: function(response){
+                                console.log(response);
+                            }
+                        }
+                });
+            }
+        },
+    });
+</script>

@@ -49,7 +49,7 @@ var CSVSManager = {
 
     prs: {
         ancestry: function (args) {
-                    return CSVSManager._doRequest(args, 'prs', 'ancestry/fetch');
+            return CSVSManager._doRequest(args, 'prs', 'ancestry/fetch');
         },
         fetch: function (args) {
             return CSVSManager._doRequest(args, 'prs', 'fetch');
@@ -60,6 +60,18 @@ var CSVSManager = {
         diseases: function (args) {
             return CSVSManager._doRequest(args, 'prs', 'diseases');
         },
+    },
+
+    methylation:{
+        fetch: function (args) {
+            return CSVSManager._doRequest(args, 'methylation', 'fetch');
+        },
+        annotation: function (args) {
+           return CSVSManager._doRequest(args, 'methylation', 'annotation');
+       },
+        filters: function (args) {
+            return CSVSManager._doRequest(args, 'methylation', 'filters');
+       }
     },
 
     _url: function (args, api, action) {

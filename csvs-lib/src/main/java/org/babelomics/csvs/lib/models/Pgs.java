@@ -17,7 +17,7 @@ import java.util.List;
  */
 @Entity(noClassnameStored = true)
 // Poligenic Risk Score
-public class Prs {
+public class Pgs {
 
     static public final String NOT_REPORTED = "Not Reported";
 
@@ -46,7 +46,7 @@ public class Prs {
     @Property("releaseDate")
     private String releaseDate;
 
-    public Prs() {
+    public Pgs() {
         this.efos =  new ArrayList<>();
         this.sources =  new ArrayList<>();
         this.scores =  new ArrayList<>();
@@ -120,7 +120,7 @@ public class Prs {
            // }
         //}
 
-        return "Prs{" +
+        return "Pgs{" +
                 "id='" + id + '\'' +
 
 //                ", attr=" + attr +

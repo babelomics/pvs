@@ -158,6 +158,9 @@
                                     } catch (e) {
                                         console.log("Problem loading ancestries");
                                     }
+                                },
+                                error: function(response){
+                                    console.log(response);
                                 }
                             }
                     })

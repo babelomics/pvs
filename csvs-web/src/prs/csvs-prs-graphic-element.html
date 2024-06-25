@@ -192,6 +192,9 @@
                             },*/
                             dataLabels: {
                                 enabled: true,
+                                style: {
+                                    textOutline: false
+                                }
                             }
                         }
                     },
@@ -303,6 +306,9 @@
                                 //me.reloadChart();
                                 console.log(e);
                             }
+                        },
+                        error: function(response) {
+                                console.log(response);
                         }
                     }
                 });

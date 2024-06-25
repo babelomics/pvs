@@ -2,17 +2,16 @@ package org.babelomics.csvs.lib.models.prs;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.Embedded;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Property;
+import org.mongodb.morphia.annotations.*;
 
-import java.util.List;
 /**
  * @author grg.
  */
 @Entity(noClassnameStored = true)
-public class PrsGraphic {
+@Indexes({
+        @Index(name = "index_idPgs_gid", fields = {@Field("idPgs"),@Field("gid")}),
+})
+public class PgsGraphic {
 
     public static String GENOME = "G";
     public static String EXOME = "E";
@@ -33,7 +32,7 @@ public class PrsGraphic {
     @Property("genome")
     private Double genome;
 
-    public PrsGraphic() {
+    public PgsGraphic() {
     }
 
     public String getIdPgs() {
@@ -70,7 +69,7 @@ public class PrsGraphic {
 
     @Override
     public String toString() {
-        return "PrsGraphic{" +
+        return "PgsGraphic{" +
                 "id=" + id +
                 ", idPgs='" + idPgs + '\'' +
                 ", gid='" + gid + '\'' +

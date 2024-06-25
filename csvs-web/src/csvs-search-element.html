@@ -19,6 +19,9 @@
 <link rel="import" href="csvs-contact-request.html">
 
 <link rel="import" href="csvs-pathopedia.html">
+<link rel="import" href="./methylation/csvs-methylation-graphic-element.html">
+<script src="./variant/csvs-search-columns.js"></script>
+<script src="./variant/csvs-search-parse.js"></script>
 
 <dom-module id="csvs-search-element">
     <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
@@ -353,6 +356,7 @@
                     <div on-click="handleMenuClick" data-option="phenotype">Phenotype</div>
                     <div on-click="handleMenuClick" data-option="effect">Effect</div>
                     <div on-click="handleMenuClick" data-option="pharmacogenomic">PGx</div>
+                    <div on-click="handleMenuClick" data-option="methylation">Methylation</div>
                 </div>
 
                 <div id="tools" class="horizontal layout flex">
@@ -362,7 +366,7 @@
                     <stv-variant-phenotype id="phenotype" hidden class="tool"></stv-variant-phenotype>
                     <stv-variant-effect id="effect" hidden class="tool"></stv-variant-effect>
                     <csvs-variant-pharmacogenomic id="pharmacogenomic" hidden class="tool"></csvs-variant-pharmacogenomic>
-
+                    <csvs-methylation-graphic-element id="methylation"  hidden  class="tool"></csvs-methylation-graphic-element>
                 </div>
             </div>
             <div id="saturationDiv" hidden$="{{!saturation}}" class="vertical layout">
@@ -396,125 +400,13 @@
             highlights: {
                 type: Array,
                 value: function () {
-                    return [{
-                        group: "Deleteriousness",
-                        groupValues: [
-                            {
-                                name: "sift",
-                                title: "SIFT",
-                                description: "SIFT score predicts whether an amino acid substitution affects protein function. SIFT value less than 0.05 represents a 'deleterious' prediction. SIFT value greater than or equal to 0.05 represents a 'tolerated' prediction.",
-                                op: "<",
-                                value: "0.05",
-                                defaultValue: "0.05",
-                                defaultOp: "<",
-                                ops :["<","<="],
-                                limit:{
-                                    min: 0,
-                                    max: 1
-                                }
-                            },
-                            {
-                                name: "polyphen",
-                                title: "Polyphen",
-                                description: "Polyphen score predicts the possible impact of an aninoacid subsitution on the structure and function of a protein. Polyphen scores can be benign (<0.446), possibly damaging (0.446-0.908) or probably damaging (>0.908).",
-                                op: ">",
-                                value: "0.91",
-                                defaultValue: "0.91",
-                                defaultOp: ">",
-                                ops :[">", ">="],
-                                limit:{
-                                    min: 0,
-                                    max: 1
-                                }
-                            },
-                            {
-                                name: "cadd",
-                                title: "CADD",
-                                description: "CADD tool scores the deleteriousness of snvs and indels. Higher values indicate more likely to have deleterious effects.",
-                                op: ">",
-                                value: "15",
-                                defaultValue: "15",
-                                defaultOp: ">",
-                                ops :[">",">="]
-                            }
-                        ]
-                    },
-                        {
-                            group: "Conservation",
-                            groupValues: [
-                                {
-                                    name: "gerp",
-                                    title: "GERP",
-                                    description: "GERP score estimates the level of conservation of positions. Positive scores represents a substitution deficit and this indicate that a site may be under evolutionary constraint. Negative scores indicate that a site is probably evolving neutrally. Some author suggest that scores >=2 indicate evolutionary constraint and >=3 indicate purifying selection.",
-                                    op: ">",
-                                    value: "2",
-                                    defaultValue: "2",
-                                    defaultOp: ">",
-                                    ops :[">", ">="],
-                                    limit:{
-                                        min: -15,
-                                        max: 7
-                                    }
-                                }]
-                        },
-                    ]
+                    return CSVSSearchColumns.highlights;
                 }
             },
             highlightsSO: {
                 type: Object,
                 value: function() {
-                    return {
-                            group:"SO terms",
-                            name: "ct",
-                            values:[],
-                            groupValues:[
-                                { category: "Integenic", ops: [
-                                    { name: "upstream_gene_variant", impact: "MODIFIER", checked: true, defaultChecked: true, order:28},
-                                    { name: "2KB_upstream_variant", impact: "MODIFIER", checked: true, defaultChecked: true, order:26},
-                                    { name: "downstream_gene_variant", impact: "MODIFIER", checked: true, defaultChecked: true, order:29},
-                                    { name: "2KB_downstream_variant", impact: "MODIFIER", checked: true, defaultChecked: true, order:27},
-                                    { name: "intergenic_variant", impact: "MODIFIER", checked: true, defaultChecked: true, order:38},
-                                    { name: "downstream_variant", impact: "MODIFIER", checked: true, defaultChecked: true, order:29},
-                                    { name: "upstream_variant", impact: "MODIFIER", checked: true, defaultChecked: true, order:28} ]},
-                                { category: "Regulatory", ops: [
-                                    { name: "mature_miRNA_variant", impact: "MODIFIER", checked: true, defaultChecked: true, order:19},
-                                    { name: "regulatory_region_ablation", impact: "MODIFIER", checked: true, defaultChecked: true, order:33},
-                                    { name: "regulatory_region_amplification", impact: "MODIFIER", checked: true, defaultChecked: true, order:34},
-                                    { name: "regulatory_region_variant", impact: "MODIFIER", checked: true, defaultChecked: true, order:36},
-                                    { name: "TF_binding_site_variant", impact: "MODIFIER", checked: true, defaultChecked: true, order:32},
-                                    { name: "TFBS_ablation",	impact: "MODIFIER", checked: true, defaultChecked: true, order:30},
-                                    { name: "TFBS_amplification",	impact: "MODIFIER", checked: true, defaultChecked: true, order:31}] },
-                                { category: "Coding", ops: [
-                                    { name: "coding_sequence_variant", impact: "MODIFIER", checked: true, defaultChecked: true, order:18},
-                                    { name: "feature_elongation",	impact: "MODIFIER", checked: true, defaultChecked: true, order:35},
-                                    { name: "feature_truncation",	impact: "MODIFIER",checked: true,  defaultChecked: true, order:37},
-                                    { name: "frameshift_variant",	impact: "HIGH" , checked: true, defaultChecked: true, order:5},
-                                    { name: "incomplete_terminal_codon_variant",	impact: "LOW", checked: true, defaultChecked: true, order:14},
-                                    { name: "inframe_deletion", impact: "MODERATE", checked: true, defaultChecked: true, order:10},
-                                    { name: "inframe_insertion",	impact: "MODERATE", checked: true, defaultChecked: true, order:9},
-                                    { name: "missense_variant", impact: "MODERATE", checked: true, defaultChecked: true, order:11 },
-                                    { name: "NMD_transcript_variant", impact: "MODIFIER", checked: true, defaultChecked: true, order:24},
-                                    { name: "protein_altering_variant", impact: "MODERATE", checked: true, defaultChecked: true, order:12},
-                                    { name: "synonymous_variant",	impact: "LOW", checked: true, defaultChecked: true, order:17},
-                                    { name: "start_lost", impact: "HIGH", checked: true, defaultChecked: true, order:7},
-                                    { name: "stop_retained_variant", impact: "LOW", checked: true, defaultChecked: true, order:16 },
-                                    { name: "stop_gained", impact: "HIGH", checked: true, defaultChecked: true, order:4},
-                                    { name: "stop_lost", impact: "HIGH", checked: true, defaultChecked: true, order:6},
-                                    { name: "start_retained_variant",	impact: "LOW", checked: true, defaultChecked: true, order:15}] },
-                                { category: "No coding", ops: [
-                                    { name: "3_prime_UTR_variant", impact: "MODIFIER",checked: true, defaultChecked: true, order:21},
-                                    { name: "5_prime_UTR_variant", impact: "MODIFIER", checked: true, defaultChecked: true, order:20},
-                                    { name: "intron_variant", impact: "MODIFIER", checked: true, defaultChecked: true, order:23},
-                                    { name: "non_coding_transcript_exon_variant", impact: "MODIFIER",checked: true, defaultChecked: true, order:22},
-                                    { name: "non_coding_transcript_variant", impact: "MODIFIER", checked: true, defaultChecked: true, order:25}] },
-                                { category: "Splice", ops: [
-                                    { name: "splice_acceptor_variant", impact: "HIGH", checked: true, defaultChecked: true, order:2},
-                                    { name: "splice_donor_variant", impact: "HIGH", checked: true, defaultChecked: true, order:3},
-                                    { name: "splice_region_variant", impact: "LOW", checked: true, defaultChecked: true, order:13}]},
-                                { ops: [ {name: "transcript_ablation" , impact: "HIGH", checked: true, defaultChecked: true, order:1}]},
-                                { ops: [ {name: "transcript_amplification" , impact: "HIGH", checked: true, defaultChecked: true, order:8}]},
-                            ]
-                        }
+                    return CSVSSearchColumns.highlightsSO;
                 },
             },
             regionValue: {
@@ -683,63 +575,6 @@
             this.selectedSpecies = DEFAULT_SPECIES;
         },
 
-        _getStyleFormula: function(row, field) {
-            var style = {};
-
-            var obj = null;
-            if (row != undefined && row != null) {
-                for (var i = 0; i < this.highlights.length && obj == null; i++) {
-                    obj = !!this.highlights[i].groupValues && this.highlights[i].groupValues.find(h  => h.name === field);
-                }
-
-                if (obj != null && obj != undefined && !!row && !!obj.value) {
-                    if (eval(row + " " + obj.op + " " + obj.value)) {
-                        style.color = '#fff';
-                        style.backgroundColor = '#f47070';
-                    }
-                }
-            }
-            return style;
-        },
-
-        getColor: function(impact){
-
-            switch(impact){
-                case "HIGH":
-                    return  "red";
-
-                case "MODERATE":
-                    return "#ED760E";
-
-                case "LOW":
-                    return "blue";
-
-                case "MODIFIER":
-                    return "green";
-
-                default:
-                    return "grey";
-            }
-        },
-
-        _getStyleFormulaConsequence: function(row, field){
-            var style = {};
-
-            var obj = null;
-
-            for (var i = 0; i < this.highlightsSO.groupValues.length && obj == null ; i++) {
-                if ("category" in this.highlightsSO.groupValues[i]) {
-                    obj = this.highlightsSO.groupValues[i].ops.find(h => h.name === row && h.checked);
-                } else {
-                     obj = this.highlightsSO.groupValues[i].ops.find(h => h.name === row && h.checked);
-                }
-            }
-
-            if (obj != null && obj!= undefined && !!row){
-                style.color = this.getColor(obj.impact);
-            }
-            return style;
-        },
 
         handleHighlights: function(){
             var msj = "";
@@ -862,535 +697,7 @@
                 this.submitForm();
             }
 
-            this.columns = [{
-                    name: 'chromosome',
-                    title: "Chr",
-                    disableSort: true,
-                    width: 40
-                }, {
-                    name: 'position',
-                    title: 'Position',
-                    disableSort: true,
-                    width: 70
-                }, {
-                    name: 'alleles',
-                    title: 'Alleles',
-                    width: 50,
-                    disableSort: true,
-                    formula: function(row) {
-                        return row.reference + ">" + row.alternate;
-                    }
-                }, {
-                    name: 'genes',
-                    title: 'Gene',
-                    width: 100,
-                    defaultValue: ".",
-                    disableSort: true,
-                    disableTooltip: true,
-                    formula: function(row){
-                        if (row.genes != "" && row.genes != "." && row.genes !=  undefined) {
-                            var genes = row.genes.split(',');
-                            var result=[];
-                            genes.forEach(
-                                function(g) {
-                                    result.push("<a class='link' href='https://www.genecards.org/cgi-bin/carddisp.pl?gene=" + g  +"' target='_blank' " +
-                                        "title=" + g + ">"+g+"</a>");
-                                }
-                            );
-                            return result.join(",");
-                        } else
-                            return row.genes;
-                }
-                }, {
-                    name: 'id',
-                    title: 'Id',
-                    width: 90,
-                    defaultValue: ".",
-                    disableSort: true,
-                    disableTooltip: true,
-                    formula: function(row){
-                        if (row.id != undefined) {
-                            if (row.id != "" && row.id != ".")
-                                return "<a class='link' href='https://www.ncbi.nlm.nih.gov/snp/" + row.id + "' target='_blank' " +
-                                    "title=" + row.id + ">" + row.id + "</a>";
-                            else
-                                return row.id;
-                        } else
-                            return ".";
-                    }
-                },{
-                    title: '<span title="Genotype counts:\n 0/0: homozygous reference\n 0/1: heterozygous\n 1/1: homozygous alterntive\n ./.: missing">Genotypes <sup><i class="fa fa-info-circle aria-hidden="true"></i></sup></span>',
-                    name: 'genotypes',
-                    width: 200,
-                    columns: [{
-                        name: "gt00",
-                        width: 50,
-                        title: '0/0',
-                        disableSort: true,
-                        formula: function(row) {
-                            if (row.stats != null && row.stats.gt00 != null)
-                                return row.stats.gt00;
-                            else
-                                return ".";
-                            }
-                    }, {
-                        name: "gt01",
-                        width: 50,
-                        title: '0/1',
-                        disableSort: true,
-                        formula: function(row) {
-                            if (row.stats != null && row.stats.gt01 != null)
-                                return row.stats.gt01;
-                            else
-                                return ".";
-                            }
-                    }, {
-                        name: "gt11",
-                        width: 50,
-                        title: '1/1',
-                        formula: function(row) {
-                            if (row.stats != null && row.stats.gt11 != null)
-                                return row.stats.gt11;
-                            else
-                                return ".";
-                            }
-                    }, {
-                        name: "gtmissing",
-                        width: 50,
-                        title: './.',
-                        disableSort: true,
-                        formula: function(row) {
-                            if (row.stats != null && row.stats.gtmissing != null)
-                                return row.stats.gtmissing;
-                            else
-                                return ".";
-                        }
-                    }]
-                }, {
-                    title: '<span title="Allele Frequency:\n 0 Freq: allele frequency for reference\n 1 Freq: allele frequency for alternative\n MAF: Minor Allele Frequency, the lowest value between 0 Freq and 1 Freq">Freq. <sup><i class="fa fa-info-circle aria-hidden="true"></i></sup></span>',
-                    name: "freq",
-                    width: 150,
-                    disableSort: true,
-                    columns: [{
-                        name: "refFreq",
-                        width: 50,
-                        title:   '0 Freq',
-                        formula: function(row) {
-                            if (row.stats != null && row.stats.refFreq != null)
-                                return row.stats.refFreq;
-                            else
-                                return ".";
-                        }
-                    }, {
-                        name: "altFreq",
-                        width: 50,
-                        title: '1 Freq',
-                        disableSort: true,
-                        formula: function(row) {
-                            if (row.stats != null && row.stats.altFreq != null)
-                                return row.stats.altFreq;
-                            else
-                                return ".";
-                        }
-                    }, {
-                        name: "maf",
-                        width: 50,
-                        title: 'MAF',
-                        disableSort: true,
-                        formula: function(row) {
-                            if (row.stats != null && row.stats.maf != null)
-                                return row.stats.maf;
-                            else
-                                return ".";
-                        }
-                    }]
-
-                     }, {
-                        title: "<span title='Alternate Allele Frequency in 1000 genomes project database (phase 3)'>1000G AAF (phase 3) <sup><i class=\"fa fa-info-circle\" aria-hidden=\"true\"></i></sup></span>",
-                        width: 150,
-                        name: 'aaf1000G3',
-                        columns: [{
-                            name: "aaf1000G_PHASE_3_ALL",
-                            title: "ALL",
-                            defaultValue: ".",
-                            disableSort: true,
-                            formula: function(row) {
-                                if (row.aaf1000G_PHASE_3_ALL != null) {
-                                    return row.aaf1000G_PHASE_3_ALL;
-                                } else {
-                                    return ".";
-                                }
-                            },
-                        }, {
-                            name: "aaf1000G_PHASE_3_AMR",
-                            title:  "<span title='AMR: American '>AMR <sup><i class=\"fa fa-info-circle\" aria-hidden=\"true\"></i></sup></span>",
-                            defaultValue: ".",
-                            visible: false,
-                            disableSort: true,
-                            formula: function(row) {
-                                if (row.aaf1000G_PHASE_3_AMR != null) {
-                                    return row.aaf1000G_PHASE_3_AMR;
-                                } else {
-                                    return ".";
-                                }
-                            },
-
-                        }, {
-                            name: "aaf1000G_PHASE_3_SAS",
-                            title:  "<span title='SAS: South Asian'>SAS <sup><i class=\"fa fa-info-circle\" aria-hidden=\"true\"></i></sup></span>",
-                            defaultValue: ".",
-                            visible: false,
-                            formula: function(row) {
-                                if (row.aaf1000G_PHASE_3_SAS != null) {
-                                    return row.aaf1000G_PHASE_3_SAS;
-                                } else {
-                                    return ".";
-                                }
-                            }
-                        }, {
-                            name: "aaf1000G_PHASE_3_EAS",
-                            title:  "<span title='EAS: East Asian'>EAS <sup><i class=\"fa fa-info-circle\" aria-hidden=\"true\"></i></sup></span>",
-                            defaultValue: ".",
-                            visible: false,
-                            disableSort: true,
-                            formula: function(row) {
-                                if (row.aaf1000G_PHASE_3_EAS != null) {
-                                    return row.aaf1000G_PHASE_3_EAS;
-                                } else {
-                                    return ".";
-                                }
-                            }
-                        }, {
-                            name: "aaf1000G_PHASE_3_AFR",
-                            title: "<span title='AFR: African'>AFR <sup><i class=\"fa fa-info-circle\" aria-hidden=\"true\"></i></sup></span>",
-                            defaultValue: ".",
-                            visible: false,
-                            disableSort: true,
-                            formula: function(row) {
-                                if (row.aaf1000G_PHASE_3_AFR != null) {
-                                    return row.aaf1000G_PHASE_3_AFR;
-                                } else {
-                                    return ".";
-                                }
-                            }
-                        }, {
-                            name: "aaf1000G_PHASE_3_EUR",
-                            title: "<span title='EUR: European'>EUR <sup><i class=\"fa fa-info-circle\" aria-hidden=\"true\"></i></sup></span>",
-                            defaultValue: ".",
-                            disableSort: true,
-                            formula: function(row) {
-                                if (row.aaf1000G_PHASE_3_EUR != null) {
-                                    return row.aaf1000G_PHASE_3_EUR;
-                                } else {
-                                    return ".";
-                                }
-                            },
-                        } ]
-
-                    }, {
-                        title: "<span title='Alternate Allele Frequency in Exome Aggregation Consortium (ExAC) database'>ExAC AAF <sup><i class=\"fa fa-info-circle\" aria-hidden=\"true\"></i></sup></span>",
-                        width: 65,
-                        name: 'aafexac',
-                        columns: [{
-                                name: "aafexac_ALL",
-                                title: "ALL",
-                                defaultValue: ".",
-                                disableSort: true,
-                                formula: function(row) {
-                                    if (row.aafexac_ALL != null) {
-                                        return row.aafexac_ALL;
-                                    } else {
-                                        return ".";
-                                    }
-                                }
-                            }
-                        ]
-                    }, {
-                        title: "<span title='Alternate Allele Frequency in Exome Sequencing Project (ESP) database'>ESP6500 AAF <sup><i class=\"fa fa-info-circle\" aria-hidden=\"true\"></i></sup></span>",
-                        width: 100,
-                        name: 'aaf6500',
-                        columns: [{
-                            name: "aafESP_ALL",
-                            title: "ALL",
-                            defaultValue: ".",
-                            disableSort: true,
-                            formula: function (row) {
-                                if (row.aafESP_ALL != null) {
-                                    return row.aafESP_ALL;
-                                } else {
-                                    return ".";
-                                }
-                            }
-                        }, {
-                            name: "aafESP_EA",
-                            title: "<span title='EA: European American'>EA <sup><i class=\"fa fa-info-circle\" aria-hidden=\"true\"></i></sup></span>",
-                            defaultValue: ".",
-                            disableSort: true,
-                            formula: function (row) {
-                                if (row.aafESP_EA != null) {
-                                    return row.aafESP_EA;
-                                } else {
-                                    return ".";
-                                }
-                            }
-                    }]
-                },  {
-                    title: "<span title='Alternate Allele Frequency in Genome Aggregation Database (gnomAD)'>gnomAD AAF <sup><i class=\"fa fa-info-circle\" aria-hidden=\"true\"></i></sup></span>",
-                    width: 130,
-                    name: 'gnomAD',
-                    columns: [{
-                        name: "aafGNOMAD_GEN_ALL",
-                        title: "GENOME ALL",
-                        defaultValue: ".",
-                        disableSort: true,
-                        formula: function (row) {
-                            if (row.aafGNOMAD_GEN_ALL != null) {
-                                return row.aafGNOMAD_GEN_ALL;
-                            } else {
-                                return ".";
-                            }
-                        }
-                    }, {
-                        name: "aafGNOMAD_EXO_ALL",
-                        title: "EXOME ALL",
-                        defaultValue: ".",
-                        disableSort: true,
-                        formula: function (row) {
-                            if (row.aafGNOMAD_EXO_ALL != null) {
-                                return row.aafGNOMAD_EXO_ALL;
-                            } else {
-                                return ".";
-                            }
-                        }
-                    }]
-                }, {
-                    name: 'sift',
-                    title: '<span title="SIFT score predicts whether an amino acid substitution affects protein function. SIFT value less than 0.05 represents a \'deleterious\' prediction. SIFT value greater than or equal to 0.05 represents a \'tolerated\' prediction">SIFT <sup><i class="fa fa-info-circle" aria-hidden="true"></i></sup></span>',
-                    width: 50,
-                    disableSort: true,
-                    formula: function(row) {
-                        if (row.sift !== null && typeof row.sift !== 'undefined') {
-                            return row.sift;
-                        } else {
-                            return ".";
-                        }
-                    },
-                    styleFormula: function(row) {
-                        return me._getStyleFormula(row.sift, 'sift')
-                    }
-                },  {
-                    name: 'polyphen',
-                    title: '<span title="Polyphen score predicts the possible impact of an aninoacid subsitution on the structure and function of a protein. Polyphen scores can be benign (<0.446), possibly damaging (0.446-0.908) or probably damaging (>0.908)">Polyphen <sup><i class="fa fa-info-circle" aria-hidden="true"></i></sup></span>',
-                    width: 60,
-                    disableSort: true,
-                    formula: function(row) {
-                        if (row.polyphen !== null  && typeof row.polyphen !== 'undefined') {
-                            return row.polyphen;
-                        } else {
-                            return ".";
-                        }
-                    },
-                    styleFormula: function(row) {
-                        return me._getStyleFormula(row.polyphen, 'polyphen')
-                    }
-                }, {
-                    name: 'phastcons',
-                    title: '<span title="phastCons scores represent probabilities of negative selection and range between 0 and 1">phastCons <sup><i class="fa fa-info-circle" aria-hidden="true"></i></sup></span>',
-                    visible: false,
-                    width: 60,
-                    disableSort: true,
-                    formula: function(row) {
-                        if (row.phastcons !== null  && typeof row.phastcons !== 'undefined') {
-                            return row.phastcons;
-                        } else {
-                            return ".";
-                        }
-                    },
-                }, {
-                    name: 'phylop',
-                    title: '<span title="phyloP scores  measure the level of conservation of positions. Positive scores measure conservation whereas negative scores measure acceleration">phyloP <sup><i class="fa fa-info-circle" aria-hidden="true"></i></sup></span>',
-                    visible: false,
-                    width: 50,
-                    disableSort: true,
-                    formula: function(row) {
-                        if (row.phylop !== null  && typeof row.phylop !== 'undefined') {
-                            return row.phylop;
-                        } else {
-                            return ".";
-                        }
-                    }
-                }, {
-                    name: 'gerp',
-                    title: '<span title="GERP score estimates the level of conservation of positions. Positive scores represents a substitution deficit and this indicate that a site may be under evolutionary constraint. Negative scores indicate that a site is probably evolving neutrally. Some author suggest that scores >=2 indicate evolutionary constraint and >=3 indicate purifying selection">GERP <sup><i class="fa fa-info-circle" aria-hidden="true"></i></sup></span>',
-                    width: 50,
-                    disableSort: true,
-                    formula: function(row) {
-                        if (row.gerp !== null  && typeof row.gerp !== 'undefined') {
-                            return row.gerp;
-                        } else {
-                            return ".";
-                        }
-                    },
-                    styleFormula: function(row) {
-                        return me._getStyleFormula(row.gerp,"gerp")
-                    }
-                }, {
-                    name: 'cadd',
-                    title: '<span title="CADD tool scores the deleteriousness of snvs and indels. Higher values indicate more likely to have deleterious effects">CADD <sup><i class="fa fa-info-circle" aria-hidden="true"></i></sup></span>',
-                    width: 50,
-                    disableSort: true,
-                    formula: function(row) {
-                        if (row.cadd !== null  && typeof row.cadd !== 'undefined') {
-                            return row.cadd;
-                        } else {
-                            return ".";
-                        }
-                    },
-                    styleFormula: function(row) {
-                        return me._getStyleFormula(row.cadd, 'cadd')
-                    }
-                }, {
-                    name: 'ct',
-                    title: '<span title="Worst consequence type found among all transcripts">Worst consequence type <sup><i class="fa fa-info-circle" aria-hidden="true"></i></sup></span>',
-                    width: 150,
-                    disableSort: true,
-                    formula: function (row) {
-                        return row.annots.displayConsequenceType;
-                    },
-                    styleFormula: function(row) {
-                        return me._getStyleFormulaConsequence(row.annots.displayConsequenceType, 'ct')
-                    }
-                }, {
-                    name: 'phenotypes',
-                    title: '<span title="Information about relationships among human variations and Clinvar and Cosmic databases">Phenotypes <sup><i class="fa fa-info-circle" aria-hidden="true"></i></sup></span>',
-                    //width: 450,
-                    width: 300,
-                    columns: [{
-                        name: 'clinvar',
-                        title: 'Clinvar',
-                        width: 150,
-                        disableSort: true,
-                        formula: function(row) {
-                            try {
-                                return row.phenotypes.clinvar;
-                            } catch (e) {
-                                return ".";
-                            }
-                        }
-                    }, {
-                        name: 'cosmic',
-                        title: 'Cosmic',
-                        width: 150,
-                        disableSort: true,
-                        formula: function(row) {
-                            try {
-                                return row.phenotypes.cosmic;
-                            } catch (e) {
-                                return ".";
-                            }
-
-                        }
-                    }]
-                }, {
-                    name: 'pharmacogenomics',
-                    title: '<span title=" Exist information about pharmacogenomics databases (https://www.pharmgkb.org/)">Pharmacogenomics <sup><i class="fa fa-info-circle" aria-hidden="true"></i></sup></span>',
-                    width: 150,
-                    defaultValue: "",
-                    disableSort: true,
-                    disableTooltip: true,
-                    formula: function (row) {
-                        try {
-                            if (row.pharma != undefined && row.pharma.length > 0) {
-                                var result = [];
-                                row.pharma.forEach(
-                                    function (p) {
-                                        if (p.starAllele != null) {
-                                            var search = p.gene + (p.starAllele.startsWith("*") ? "" : " ") + p.starAllele;
-                                            if (p.starAllelePA != null) {
-                                                result.push("<a class='link' href='https://www.pharmgkb.org/haplotype/" + p.starAllelePA + "' target='_blank' " +
-                                                    "title = \"" + search + "\">" + p.starAllele + " (" + p.r + ">" + p.a + ")" + "</a>");
-                                            } else {
-
-                                                result.push("<a class='link' href='https://www.pharmgkb.org/search?type=haplotype&query=" + search + "' target='_blank' " +
-                                                    "title = \"" + search + "\">" + p.starAllele + " (" + p.r + ">" + p.a + ")" + "</a>");
-                                            }
-                                        } else {
-                                            return ".";
-                                        }
-                                    }
-                                );
-                                return result.join(", ");
-                            } else {
-                                return "";
-                            }
-                        } catch (e) {
-                            return "";
-                        }
-                    }
-                }, {
-                    name: 'secondaryFindings',
-                    title: '<span title=" For variants labeled as secondary finding according to ACMG recommendations, phenotype and OMIM disorder related with the gene are indicated, as well as the inheritance model for the disease (AD, autosomal dominant; AR, autosomal recessive; SD, semidominant; XL, X-linked). External link to the OMIM disorder is available if you click on the text (see documentation for more information)">Secondary findings <sup><i class="fa fa-info-circle" aria-hidden="true"></i></sup></span>',
-                    width: 150,
-                    defaultValue: "",
-                    disableSort: true,
-                    disableTooltip: true,
-                    formula: function (row) {
-                        try {
-                            if (row.secFindings != undefined && row.secFindings.length > 0) {
-                                var result = [];
-                                var tooltip=[]
-                                row.secFindings.forEach(
-                                    function (sf) {
-                                        result.push("(" + sf.inheritance + ") ");
-                                        sf.omims.forEach(
-                                            function (sfOmim) {
-                                                var titleSF = "(" + sf.inheritance + ") " + "OMIM:" + sfOmim + " - " + sf.genericPhenotype + ", " +  sf.gene ;
-                                                tooltip.push(titleSF);
-                                                result.push("<a class='link' href='https://www.omim.org/entry/" + sfOmim + "' target='_blank' " +
-                                                "title = \"" + titleSF + "\">" +
-                                                "OMIM:" + sfOmim + "</a>");
-                                            }
-                                        )
-                                        result.push(sf.genericPhenotype);
-                                    }
-                                );
-                                return "<span title=\"" + tooltip.join("; ")+ "\">" + result.join(", ") + "</span>";
-                            } else {
-                                return "";
-                            }
-                        } catch (e) {
-                            return "";
-                        }
-                    }
-                }, {
-                    name: 'addressBook',
-                    title: '<span title="Send a request to the reporter of this variant">Contact <br/> request <sup><i class="fa fa-info-circle" aria-hidden="true"></i></sup></span>',
-                    width: 60,
-                    disableSort: true,
-                    disableTooltip: true,
-                    formula: function (row) {
-                        var variant = row.chromosome + ":" + row.position + " " + row.reference + ">" + row.alternate;
-                    return "<csvs-address-book variant='"+ variant + "'></csvs-address-book>";
-                    }
-                }, {
-                    name: 'pathopedia',
-                    title: 'Pathopedia <br/><br/><csvs-desc-pathopedia></csvs-desc-pathopedia>',
-                    width: 190,
-                    disableTooltip: true,
-                    formula: function (row) {
-                        var variant = row.chromosome + ":" + row.position + " " + row.reference + ">" + row.alternate;
-                        var refIni = ("referenceIni" in row)? " ref_ini='" + row.referenceIni + "'" : "";
-                        var altIni = ("alternateIni" in row)? " alt_ini='" + row.alternateIni + "'" : "";
-
-                        if (row.pathopedia != null) {
-                            var mtto = JSON.stringify(row.pathopedia.mapTotalTypeOpinion);
-                            return "<csvs-pathopedia map_total_type_opinion=" + mtto + " variant='" + variant + "'" + " total='" + row.pathopedia.total + "'" + refIni + altIni + "></csvs-pathopedia>";
-                        } else {
-                            return "<csvs-pathopedia  variant='" + variant + "'" + refIni + altIni + "></csvs-pathopedia>";
-                        }
-                    }
-                }
-            ];
+            this.columns = [...CSVSSearchColumns.columns];
             this.reloadChart({});
         },
         downloadFiles: function(e) {
@@ -1485,6 +792,9 @@
 
             if (!!this.$.pharmacogenomic)
                 this.$.pharmacogenomic.isEmpty = true;
+
+            if (!!this.$.methylation)
+                this.$.methylation.isEmpty = true;
 
             var me = this;
             var query = {};
@@ -1591,11 +901,10 @@
                         query: query,
                         request: {
                             success: function(response) {
-
                                 var data = response.result[0];
 
                                 for (var region in regionGene) {
-                                    if (region in data) {
+                                    if (data != undefined && region in data) {
                                         var newKey = regionGene[region];
                                         data[newKey] = data[region];
                                         delete data[region];
@@ -1610,7 +919,9 @@
                                     // remove msj loading
                                     me.loadingSaturation = false
                                 }
-
+                            },
+                            error: function(response){
+                                console.log(response);
                             }
                         }
                     });
@@ -1755,10 +1066,10 @@
                 url: this.formURL,
                 auxTotalCount: -1,
                 parse: function(response) {
-                    return me._parse(response);
+                    return CSVSSearchParse._parse(response);
                 },
                 parseTotal: function(response) {
-                    var total = me._parseTotal(response);
+                    var total = CSVSSearchParse._parseTotal(response);
 
                     me.numTotalResults = total;
 
@@ -1798,498 +1109,7 @@
             return worst.ct;
         },
 
-        _parse: function(response) {
-            var me = this;
-            var data = response.result;
-            var positions = [];
-            var positionsSearch = [];
-            var positionsDoubleVariant = [];
-            var doubleVariant = [];
-            var referencePosition = [];
-            var referenceVariant = [];
-            //Cellbase use - never * o nothing, we need change, annotate and change
-            for (var i = 0; i < data.length; i++) {
-                var row = data[i];
 
-                //Add posisition to search pathopedia
-                positionsSearch.push(row.chromosome + ":" + row.position + ":" + row.reference + ":" + row.alternate);
-
-                if(row.alternate == ""){
-                    positionsDoubleVariant.push(i);
-                    doubleVariant.push(row.alternate);
-                    row.alternate = "-";
-                }
-
-                if(row.alternate != undefined && (row.alternate).indexOf(",") != -1){
-                    positionsDoubleVariant.push(i);
-                    doubleVariant.push(row.alternate);
-                    row.alternate = row.alternate.split(",")[0];
-                    if(row.alternate == ""){
-                        row.alternate = "-";
-                    }
-                }
-
-                if(row.reference == ""){
-                    referencePosition.push(i);
-                    referenceVariant.push(row.reference);
-                    row.reference = "-";
-                }
-
-                var variant = row.chromosome + ":" + row.position + ":" + row.reference + ":" + row.alternate;
-                positions.push(variant);
-            }
-
-            // Pathopedia
-            var query = positionsSearch.join("&");
-            if (positionsSearch.length > 0) {
-                CSVSManager.pathologies.fetch({
-                    id: query,
-                    request: {
-                        async: false,
-                        success: function (response) {
-                            if (response != undefined && response.numResults > 0) {
-                                for (var i = 0; i < response.result.length; i++) {
-                                    var obj = response.result[i];
-                                    if (obj.total > 0) {
-                                        for (var j = 0; j < data.length; j++) {
-
-                                            if (obj.variant.chromosome == data[j].chromosome &&
-                                                obj.variant.position == data[j].position) {
-
-                                                var alt = ("alternateIni" in data[j]) ? data[j].alternateIni :  data[j].alternate;
-                                                var ref = ("referenceIni" in data[j]) ? data[j].referenceIni :  data[j].reference;
-                                                if (ref == "-")
-                                                    ref ="";
-
-
-                                                if (obj.variant.alternate == alt && obj.variant.reference == ref) {
-
-                                                    data[j].pathopedia = {
-                                                        "mapTotalTypeOpinion": obj.mapTotalTypeOpinion.valueOf(),
-                                                        "total": obj.total,
-                                                    };
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                            }
-                        }
-                    }
-                });
-            }
-
-            // Pharma
-            var query = positionsSearch.join("&");
-            if (positionsSearch.length > 0) {
-
-                var positionsRs = [];
-                for (var i = 0; i < data.length; i++) {
-                    positionsRs.push(data[i].ids);
-                }
-
-                CSVSManager.pharmacogenomics.annotation({
-                    query: { variants: query, rs: positionsRs.join(",")},
-                    request: {
-                        async: false,
-                        success: function (response) {
-                            if (response != undefined && response.numResults > 0) {
-                                for (var i = 0; i < response.result.length; i++) {
-                                    var obj = response.result[i];
-
-                                    for (var j = 0; j < obj.variants.length; j++) {
-                                        var objVariant = obj.variants[j];
-                                        for (var indexData = 0; indexData < data.length; indexData++) {
-
-                                            if ((objVariant.chromosome == data[indexData].chromosome &&
-                                                objVariant.position == data[indexData].position)  || objVariant.ids == data[indexData].ids) {
-
-                                                var alt = ("alternateIni" in data[indexData]) ? data[indexData].alternateIni : data[indexData].alternate;
-                                                var ref = ("referenceIni" in data[indexData]) ? data[indexData].referenceIni : data[indexData].reference;
-                                                if (ref == "-")
-                                                    ref = "";
-
-                                                if (objVariant.reference == ref && (objVariant.alternate == ref || objVariant.alternate == alt)) {
-                                                //if ((objVariant.reference == ref) || objVariant.ids == data[indexData].ids) {
-                                                    if (data[indexData].pharma == undefined) {
-                                                        data[indexData].pharma = [];
-                                                    }
-                                                     var genePA = obj.pharmaIds != null ? obj.pharmaIds.filter(function(item ){ return item.ty == "gene" && item.name == obj.gene}):null;
-                                                     var starAllelePA = obj.pharmaIds != null ? obj.pharmaIds.filter(function(item){return item.ty === "haplotype" && item.name == obj.gene +  (obj.starAllele.startsWith("*") ? "" : " ") + obj.starAllele}) : null;
-                                                     var idsPA = obj.pharmaIds != null && data[indexData].ids != null ? obj.pharmaIds.filter(function(item){return item.ty === "variant" && item.name == data[indexData].ids}) : null;
-
-                                                      data[indexData].pharma.push({
-                                                        "gene": obj.gene,
-                                                        "starAllele": obj.starAllele,
-                                                        "r": ref,
-                                                        "a": objVariant.alternate,
-                                                        "numVariants":  obj.variants != null ? obj.variants.length : "",
-                                                        "genePA": genePA != null && genePA.length > 0 ? genePA[0].idPA:null,
-                                                        "starAllelePA": starAllelePA != null && starAllelePA.length > 0 ? starAllelePA[0].idPA : null,
-                                                        "idsPA": idsPA != null && idsPA.length > 0 ? idsPA[0].idPA : null
-                                                    });
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                }
-
-                            }
-                        }
-                    }
-                });
-            }
-
-            // Secondary findings
-            var query = positionsSearch.join("&");
-            if (positionsSearch.length > 0) {
-                var positionsRs = [];
-                for (var i = 0; i < data.length; i++) {
-                    positionsRs.push(data[i].ids);
-                }
-
-                CSVSManager.secondaryFindings.annotation({
-                    query: { variants: query, rs: positionsRs.join(",")},
-                    request: {
-                        async: false,
-                        success: function (response) {
-                            if (response != undefined && response.numResults > 0) {
-                                for (var i = 0; i < response.result.length; i++) {
-                                    var objVariant = response.result[i];
-                                    for (var indexData = 0; indexData < data.length; indexData++) {
-
-                                        if ((objVariant.chromosome == data[indexData].chromosome &&
-                                            objVariant.position == data[indexData].position)  || objVariant.ids == data[indexData].ids) {
-
-                                            var alt = ("alternateIni" in data[indexData]) ? data[indexData].alternateIni : data[indexData].alternate;
-                                            var ref = ("referenceIni" in data[indexData]) ? data[indexData].referenceIni : data[indexData].reference;
-                                            if (ref == "-")
-                                                ref = "";
-                                            if (alt == "-")
-                                                alt = "";
-
-                                            if (objVariant.reference == ref && (objVariant.alternate == alt || objVariant.alternate == alt)) {
-                                            //if ((objVariant.reference == ref) || objVariant.ids == data[indexData].ids) {
-                                                if (data[indexData].secFindings == undefined) {
-                                                    data[indexData].secFindings = [];
-                                                }
-                                                  data[indexData].secFindings.push({
-                                                    "gene": objVariant.gene,
-                                                    "r": ref,
-                                                    "a": objVariant.alternate,
-                                                    "omims" : objVariant.omims,
-                                                    "inheritance": objVariant.inheritance,
-                                                    "genericPhenotype": objVariant.genericPhenotype
-                                                });
-                                            }
-                                        }
-                                    }
-
-
-                                }
-
-                            }
-                        }
-                    }
-                });
-            }
-
-
-            // Annotate
-            var query = positions.join(",");
-            if (positions.length > 0) {
-
-                CellBaseManager.get({
-                    host: CELLBASE_HOST,
-                    version: CELLBASE_VERSION,
-                    species: 'hsapiens',
-                    category: 'genomic',
-                    subCategory: 'variant',
-                    resource: 'annotation',
-                    query: query,
-                    async: false,
-                    success: function(response) {
-                        try {
-                            var annotData = response.response;
-                            for (var i = 0; i < annotData.length; i++) {
-                                var obj = annotData[i];
-                                if (obj.result.length > 0) {
-                                    var annots = obj.result[0];
-                                    data[i].annots = annots;
-                                }
-                            }
-                        } catch (e) {}
-                    },
-                    error: function(e) {
-                        // debugger
-                    }
-                });
-            }
-
-            for (var z = 0; z < positionsDoubleVariant.length; z++) {
-                data[positionsDoubleVariant[z]].alternate = doubleVariant[z];
-            }
-            // Get value "" or "*" from CSVS
-            for (var z = 0; z < referencePosition.length; z++) {
-                data[referencePosition[z]].reference =  referenceVariant[z];
-             }
-
-            for (var i = 0; i < data.length; i++) {
-                var variant = data[i];
-
-                if (variant.annots == null) {
-                    continue;
-                }
-
-                // Annotate SNPid
-                if (variant.annots.id != null && variant.annots.id) {
-                    variant.id = variant.annots.id;
-                }
-
-                // Annotate Cons
-                if (variant.annots.conservation != null && variant.annots.conservation.length > 0) {
-
-                    for (var j = 0, l = variant.annots.conservation.length; j < l; j++) {
-                        var crs = variant.annots.conservation[j];
-                        if (crs) {
-                            score = crs.score.toFixed(3)
-                            switch (crs.source.toLowerCase()) {
-                                case 'phastcons':
-                                    variant.phastcons = score;
-                                    break;
-                                case 'phylop':
-                                    variant.phylop = score;
-                                    break;
-                                case 'gerp':
-                                    variant.gerp = score;
-                                    break;
-                                default:
-                            }
-                        }
-                    }
-                }
-
-
-                // Annotate CT && Subs. Score
-                if (variant.annots.consequenceTypes != null && variant.annots.consequenceTypes.length > 0) {
-
-                    var sif = -1;
-                    var sifDesc = "";
-                    var poly = -1;
-                    var polyDesc = "";
-                    var genes = [];
-
-                    for (var j = 0, l = variant.annots.consequenceTypes.length; j < l; j++) {
-                        var ct = variant.annots.consequenceTypes[j];
-
-                        if (ct != null && ct != "undefined") {
-                            if (ct.geneName != null && ct.geneName.length > 0 && genes.indexOf(ct.geneName) < 0) {
-                                genes.push(ct.geneName);
-                            }
-
-                            if (ct.proteinVariantAnnotation != null && ct.proteinVariantAnnotation.substitutionScores != null && ct.proteinVariantAnnotation.substitutionScores.length > 0) {
-                                var auxSift = null;
-                                var auxPoly = null;
-                                for (var k = 0, lP = ct.proteinVariantAnnotation.substitutionScores.length; k < lP; k++) {
-                                    var pss = ct.proteinVariantAnnotation.substitutionScores[k];
-                                    switch (pss.source.toLowerCase()) {
-                                        case 'sift':
-                                            auxSift = pss;
-                                            break;
-                                        case 'polyphen':
-                                            auxPoly = pss;
-                                            break;
-                                    }
-                                }
-
-                                if (auxPoly != null && auxSift != null) {
-                                    if (auxPoly.score > poly) {
-                                        sif = auxSift.score;
-                                        poly = auxPoly.score;
-
-                                        sifDesc = auxSift.description;
-                                        polyDesc = auxPoly.description;
-
-                                    }
-                                }
-
-                            }
-                        }
-                    }
-                    if (sif != -1 && poly != -1) {
-                        variant.sift = sif;
-                        variant.polyphen = poly;
-                    }
-
-                    if (genes.length > 0) {
-                        variant.genes = genes.join(",");
-                    }
-                }
-
-                // Functional Score
-                if (variant.annots.functionalScore != null && variant.annots.functionalScore.length > 0) {
-                    var cadd = null;
-                    for (var j = 0; j < variant.annots.functionalScore.length; j++) {
-                        var cadd_elem = variant.annots.functionalScore[j];
-                        switch (cadd_elem.source.toLowerCase()) {
-                            case 'cadd_raw':
-                                //cadd = cadd_elem.score.toFixed(3);
-                                break;
-                            // it is used in prioritization
-                            case 'cadd_scaled':
-                                cadd = cadd_elem.score.toFixed(3);
-                                break;
-                        }
-                    }
-                    if (cadd != null) {
-                        variant.cadd = cadd;
-                    }
-                }
-
-                // Clinical
-                variant.phenotypes = {
-                    cosmic: "",
-                    gwas: "",
-                    clinvar: ""
-                };
-
-                if (variant.annots.variantTraitAssociation != null) {
-                    var clinical = variant.annots.variantTraitAssociation;
-
-                    var phenotypesCosmic = [];
-                    var phenotypesGwas = [];
-                    var phenotypesClinvar = [];
-                    if (clinical.cosmic != null) {
-                        for (var j = 0; j < clinical.cosmic.length; j++) {
-                            var cosmic = clinical.cosmic[j];
-                            if (cosmic.primaryHistology != null && cosmic.primaryHistology != "") {
-                                phenotypesCosmic.push(cosmic.primaryHistology);
-                            }
-                        }
-                    }
-
-                    if (clinical.gwas != null) {
-                        for (var j = 0; j < clinical.gwas.length; j++) {
-                            var gwas = clinical.gwas[j];
-                            for (var k = 0; k < gwas.traits.length; k++) {
-                                var trait = gwas.traits[k];
-                                if (trait != null && trait != "") {
-                                    phenotypesGwas.push(trait);
-                                }
-                            }
-                        }
-                    }
-
-                    if (clinical.clinvar != null) {
-                        for (var j = 0; j < clinical.clinvar.length; j++) {
-                            var clinvar = clinical.clinvar[j];
-                            for (var k = 0; k < clinvar.traits.length; k++) {
-                                var trait = clinvar.traits[k];
-                                if (trait != null && trait != "") {
-                                    phenotypesClinvar.push(trait);
-                                }
-                            }
-                        }
-                    }
-
-                    var phenotypesCosmicFinal = phenotypesCosmic.filter(function(item, pos) {
-                        return phenotypesCosmic.indexOf(item) == pos;
-                    });
-                    var phenotypesGwasFinal = phenotypesGwas.filter(function(item, pos) {
-                        return phenotypesGwas.indexOf(item) == pos;
-                    });
-                    var phenotypesClinvarFinal = phenotypesClinvar.filter(function(item, pos) {
-                        return phenotypesClinvar.indexOf(item) == pos;
-                    });
-
-
-                    variant.phenotypes = {
-                        cosmic: phenotypesCosmicFinal.join(","),
-                        gwas: phenotypesGwasFinal.join(","),
-                        clinvar: phenotypesClinvarFinal.join(",")
-                    };
-                }
-
-                if (variant.annots.populationFrequencies != null) {
-
-                    for (var j = 0; j < variant.annots.populationFrequencies.length; j++) {
-
-                        var pfreq = variant.annots.populationFrequencies[j];
-
-                        if (pfreq.study.toLowerCase() === "1kg_phase3") {
-                            switch (pfreq.population) {
-                                case "ALL":
-                                    variant.aaf1000G_PHASE_3_ALL = Number(pfreq.altAlleleFreq).toFixed(3);
-                                    break;
-                                case "SAS":
-                                    variant.aaf1000G_PHASE_3_SAS = Number(pfreq.altAlleleFreq).toFixed(3)
-                                    break;
-                                case "EAS":
-                                    variant.aaf1000G_PHASE_3_EAS = Number(pfreq.altAlleleFreq).toFixed(3)
-                                    break;
-                                case "AMR":
-                                    variant.aaf1000G_PHASE_3_AMR = Number(pfreq.altAlleleFreq).toFixed(3)
-                                    break;
-                                case "AFR":
-                                    variant.aaf1000G_PHASE_3_AFR = Number(pfreq.altAlleleFreq).toFixed(3)
-                                    break;
-                                case "EUR":
-                                    variant.aaf1000G_PHASE_3_EUR = Number(pfreq.altAlleleFreq).toFixed(3);
-                                    break;
-
-                            }
-                        } else if (pfreq.study.toLowerCase() === "esp6500") {
-                            switch (pfreq.population) {
-                                case "EA":
-                                    variant.aafESP_EA = Number(pfreq.altAlleleFreq).toFixed(3);
-                                    break;
-                                case "AA":
-                                    variant.aafESP_AA = Number(pfreq.altAlleleFreq).toFixed(3);
-                                    break;
-                                case "ALL":
-                                    variant.aafESP_ALL = Number(pfreq.altAlleleFreq).toFixed(3);
-                                    break;
-
-
-                            }
-                        } else if (pfreq.study.toLowerCase() === "exac") {
-                            switch (pfreq.population) {
-                                case "ALL":
-                                    variant.aafexac_ALL = Number(pfreq.altAlleleFreq).toFixed(3);
-                                    break;
-                                case "EUR":
-                                    variant.aafexac_EUR = Number(pfreq.altAlleleFreq).toFixed(3)
-                                    break;
-                            }
-                        } else if (pfreq.study.toLowerCase() === "gnomad_genomes") {
-                            switch (pfreq.population) {
-                                case "ALL":
-                                    variant.aafGNOMAD_GEN_ALL = Number(pfreq.altAlleleFreq).toFixed(3);
-                                    break;
-                            }
-                        }   else if (pfreq.study.toLowerCase() === "gnomad_exomes") {
-                            switch (pfreq.population) {
-                                case "ALL":
-                                    variant.aafGNOMAD_EXO_ALL = Number(pfreq.altAlleleFreq).toFixed(3);
-                                    break;
-                            }
-                        }
-                    }
-                }
-            }
-            return data;
-        },
-        _parseTotal: function(response) {
-            if (response != null) {
-                var total = response.numTotalResults;
-            } else {
-                total = 0;
-            }
-            return total;
-        },
 
         // Get data search to conctact
         getDataSearch: function(e){
@@ -2335,7 +1155,6 @@
             this.$.dataTable.handleScroll =  function(e) { }
         },
 
-
         handleRowClick: function(e) {
             var row = e.detail.row;
 
@@ -2346,6 +1165,9 @@
                 this.$.frequency.row = row;
                 this.$.phenotype.row = row;
                 this.$.pharmacogenomic.row = row;
+                var diseaseIds = Array.from(this.$.diseases_div.querySelectorAll(".diseaseName")).filter(d=>d.checked).map(d=>d.getAttribute("value"));
+                this.$.methylation.filters = {diseases: diseaseIds };
+                this.$.methylation.data = row;
             }
 
         },
@@ -2577,9 +1399,6 @@
                     data: counts
                 });
             }
-
-            console.log(chartData);
-
             me.$.tvSaturation.dataSaturation=chartData;
 
             var chart = new Highcharts.Chart({
@@ -2614,15 +1433,12 @@
                 tooltip: {
                     useHTML: true,
                     formatter: function() {
-                        //                        debugger
                         var point = this.point;
                         if(point._samples != undefined)
                             return ' Disease Group: <b>' + point._disease + '</b><br> New Variants: <b>' + point._count + '</b> <br> Acum. Variants: <b>' + this.y + '</b></br>Samples: <b>' + point._samples + '</b>' +
-                                '</br>Acum. Samples: <b>' + this.x + '</b>'
-                                ;
+                                '</br>Acum. Samples: <b>' + this.x + '</b>';
                         else
                             return ' Disease Group: <b> </b><br> New Variants: <b>0 </b> <br> Acum. Variants: <b>0 </b></br>Samples: <b> 0</b>';
-
                     }
                 },
                 credits: {

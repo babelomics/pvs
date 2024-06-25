@@ -1,4 +1,4 @@
-<dom-module id="csvs-prs-graphic-info">
+<dom-module id="csvs-methylation-graphic-info">
     <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
         :host {
             display: block;
@@ -7,13 +7,12 @@
         .prsLabel{
             font-size: 13px;
         }
-   }
+       }
     </style>
     <template>
         <div>
-            <div>
-                <label class="stv" id="idPgs">Polygenic Score ID:</label>
-                <label class="prsLabel">{{idPgs}}</label>
+            <div style="padding-top: 10px;padding-bottom: 10px;">
+                <label class="prsLabel"><b>{{diseasesText}}</b></label>
             </div>
             <div>
                 <label class="stv" id="min">Min:</label>
@@ -24,6 +23,10 @@
                 <label class="prsLabel">{{getMax(dataGraphic)}}</label>
             </div>
             <div>
+                <label class="stv" id="avg"> Average:</label>
+                <label class="prsLabel">{{getAvg(dataGraphic)}}</label>
+            </div>
+            <div>
                 <label class="stv" id="stdDev">Std.dev.:</label>
                 <label class="prsLabel">{{getStdDev(dataGraphic)}}</label>
             </div>
@@ -32,11 +35,11 @@
                 <label class="prsLabel">{{getMean(dataGraphic)}}</label>
             </div>
             <div>
-                <label class="stv" id="deciles">Deciles:</label>
-                    <template is="dom-repeat" items="[1,2,3,4,5,6,7,8,9]" as="itemValue">
+                <label class="stv" id="quartiles">Quartiles:</label>
+                    <template is="dom-repeat" items="[1,2,3]" as="itemValue">
                         <br/>
-                        <label class="stv" style="padding-left: 30px"> decile {{itemValue}}: </label>
-                        <label class="prsLabel">{{getDecile(dataGraphic, itemValue)}}</label>
+                        <label class="stv" style="padding-left: 30px"> quartile {{itemValue}}: </label>
+                        <label class="prsLabel">{{getQuartile(dataGraphic, itemValue)}}</label>
                     </template>
             </div>
         </div>
@@ -45,13 +48,13 @@
 
 <script>
     Polymer({
-        is: 'csvs-prs-graphic-info',
+        is: 'csvs-methylation-graphic-info',
         properties: {
             dataGraphic: {
                 value: [],
                 type: Array,
             },
-            idPgs: {
+            diseasesText:{
                 value: "",
                 type: String
             }
@@ -70,7 +73,15 @@
                 return 0;
             }
         },
-
+        getAvg: function(data) {
+            if (data != null && data.length > 0){
+                let sum = 0;
+                data.forEach(d => sum += d);
+                return averageData = this.formatExpo(sum / data.length, 3);
+            } else {
+                return "-";
+            }
+        },
         getMin: function(data) {
             if (data != null && data.length > 0){
                 return  this.formatExpo(Math.min(...data), 3);
@@ -104,10 +115,10 @@
             }
         },
 
-        getDecile: function(data, num){
+        getQuartile: function(data, num){
             if (data != null && data.length > 0) {
                 const dataSort = data.sort();
-                const pos = (num * (data.length+1)) / 10;
+                const pos = (num * (data.length+1)) / 4;
                 const truncPos = Math.trunc(pos);
                 if (truncPos+1 < data.length) {
                     return this.formatExpo(dataSort[truncPos] + (pos - truncPos) * ( dataSort[truncPos+1] - dataSort[truncPos] ), 3);

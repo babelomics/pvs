@@ -43,17 +43,12 @@
                             Clear
                         </div>
                         <div class="stv-btn stv-btn-shdw flex" on-click="submitForm">Search</div>
-
                     </div>
-
                     <stv-filter-position id="filterPosition"></stv-filter-position>
                 </form>
-
             </div>
             <div id="chart" class="horizontal layout center-justified">CHART</div>
         </div>
-
-
     </template>
 </dom-module>
 <script>
@@ -297,9 +292,7 @@
                     id: regionQuery,
                     request: {
                         success: function(response) {
-
                             var data = response.result[0];
-
                             for (var region in regionGene) {
                                 if (region in data) {
                                     var newKey = regionGene[region];
@@ -312,8 +305,10 @@
                             } catch (e) {
                                 me.reloadChart({});
                             }
-
                         }
+                    },
+                    error:function(response) {
+                        console.log(response);
                     }
                 });
             }

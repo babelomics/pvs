@@ -7,8 +7,8 @@ import com.wordnik.swagger.annotations.ApiParam;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.babelomics.csvs.lib.models.DiseaseGroup;
-import org.babelomics.csvs.lib.models.Prs;
-import org.babelomics.csvs.lib.models.prs.PrsGraphic;
+import org.babelomics.csvs.lib.models.Pgs;
+import org.babelomics.csvs.lib.models.prs.PgsGraphic;
 import org.babelomics.csvs.lib.ws.QueryResponse;
 
 import javax.servlet.http.HttpServletRequest;
@@ -69,7 +69,7 @@ public class PRSWSServer extends CSVSWSServer {
 
         MutableLong count = new MutableLong(-1);
 
-        Iterable<Prs> prs = null;
+        Iterable<Pgs> prs = null;
 
         try {
             prs = qm.getPRS( searchPrsList, adSourcesList, adScoresList,adLisPgsList, skip, limit, skipCount, count);
@@ -101,7 +101,7 @@ public class PRSWSServer extends CSVSWSServer {
             @ApiParam(value = "diseases") @QueryParam("diseases") String diseases
             ) {
         MutableLong count = new MutableLong(-1);
-        List<PrsGraphic> prsGraphics = null;
+        List<PgsGraphic> prsGraphics = null;
         List<Integer> diseaseList = new ArrayList<>();
 
         try {

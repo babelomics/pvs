@@ -13,7 +13,7 @@ vulcanize \
     --strip-comments \
     --exclude "conf/config.js" \
     --exclude "conf/theme.html" \
-    csvs.html \
+    csvs-element.html \
     | crisper \
     --html build/tmp/index.html \
     --js build/tmp/index.js

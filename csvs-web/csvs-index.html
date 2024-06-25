@@ -63,6 +63,7 @@
     <script src="bower_components/highcharts/modules/accessibility.js"></script>
     <script src="bower_components/highcharts/modules/histogram-bellcurve.js"></script>
     <script src="bower_components/highcharts/css/highcharts.css"></script>
+    <script src="pattern-fill.js"></script>
 
     <script src="bower_components/jquery/dist/jquery.min.js"></script>
     <script src="bower_components/underscore/underscore-min.js"></script>
@@ -110,7 +111,7 @@
                 csvs.setAttribute("title-app", window.TITLE_APP || "Collaborative Spanish Variant Server");
                 csvs.setAttribute("acronym", window.ACRONYM_APP || "CSVS");
                 csvs.setAttribute("phenotype", window.PHENOTYPE  || "Spanish");
-                if (tab === 'prs'){
+                if (tab === 'pgs' || tab === 'methylation' || tab === 'stats'){
                     csvs.setMenu(tab ? tab: "home");
                 }
                 document.head.getElementsByTagName("title")[0].innerHTML = window.TITLE_APP || "Collaborative Spanish Variant Server";

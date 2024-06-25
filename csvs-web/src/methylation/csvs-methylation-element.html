@@ -1,0 +1,823 @@
+<link rel="import" href="./csvs-methylation-genomic-variant.html">
+<link rel="import" href="./csvs-methylation-graphic-element.html">
+
+
+<dom-module name="csvs-methylation-element">
+    <style is="custom-style" include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning">
+        :host {
+            display: block;
+            position: relative;
+            width: 100%;
+            background-color: var(--text-primary-color);
+            color: var(--primary-text-color);
+        }
+
+        #filter-form-element {
+            background-color: #FFFFFF;
+            width: 250px;
+            margin: 20px;
+            min-height: 900px;
+        }
+
+        #methylationDiv {
+            border-radius: 0px !important;
+            margin: 20px 20px 20px 0px;
+            background-color: #FFFFFF;
+            width: calc(100% - 310px);
+        }
+
+        #stv-filter-position {
+            width: 250px;
+        }
+
+        stv-tooltip::shadow .closeInfo::shadow {
+            margin-left: 490px;
+        }
+
+
+
+        stv-table::shadow #list {
+            height: 300px;
+            overflow-x: auto
+        }
+                #menu {
+            margin-top: 15px;
+        }
+
+        #menu> div {
+            font-size: 17px;
+            padding: 5px 5px;
+            margin: 0 20px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.1s;
+            cursor: pointer;
+        }
+
+        #menu> div:hover {
+            border-bottom-color: rgba(125, 125, 125, 0.4);
+        }
+
+        #menu> div[selected] {
+            border-bottom-color: rgba(125, 125, 125, 0.7);
+        }
+    </style>
+    <template>
+
+        <div class="horizontal layout">
+            <div id="filter-form-element">
+                <form class="vertical layout" id="meth_filter_form">
+                    <div id="buttons_container" class="horizontal layout end-justified" style="margin:10px 5px;">
+                        <div class="stv-btn stv-btn-shdw flex" on-click="clearForm" style="margin-right: 3px;">
+                            Clear
+                        </div>
+                        <div class="stv-btn stv-btn-shdw flex" on-click="submitForm">Search</div>
+                    </div>
+                    <stv-filter-position id="methFilterPosition"></stv-filter-position>
+                    <stv-form-box>
+                        <div class="header horizontal layout flex">
+                            <div>Subpopulations</div>
+                            <div class="flex"></div>
+                            <div on-click="selectAll" title="Select all subpopulations">
+                                <i class="fa fa-check-square-o check" name="disease"></i>
+                            </div>
+                            <div on-click="deSelectAll" title="Deselect all subpopulations">
+                                <i class="fa fa-square-o check" name="disease"></i>
+                            </div>
+                        </div>
+                        <div class="container">
+                            <div id="diseases_div">
+                                <template is="dom-repeat" items="{{diseases}}">
+                                    <template is="dom-if" if="{{item.samples}}">
+                                        <label class="stv-control">
+                                            <input type="checkbox" class="diseaseName" name="disease" id="meth_disease{{item.fId}}" value="{{item.fId}}" checked/>
+                                            <span>{{item.name}}</span>
+                                        </label>
+                                    </template>
+                                </template>
+                            </div>
+                        </div>
+                    </stv-form-box>
+                    <stv-form-box>
+                        <div class="header horizontal layout flex">
+                            <div>Technologies Array</div>
+                            <div class="flex"></div>
+                            <div on-click="selectAll"  title="Deselect all technologiesArray">
+                                <i class="fa fa-check-square-o check" name="technologyArray"></i>
+                            </div>
+                            <div on-click="deSelectAll" title="Select all technologiesArray">
+                                <i class="fa fa-square-o check" name="technologyArray"></i>
+                            </div>
+                        </div>
+                        <div class="container">
+                            <div id="technologiesArray_div">
+                                <template is="dom-repeat" items="{{technologies}}">
+                                        <label class="stv-control">
+                                            <input type="checkbox" name="technologyArray" id="technologyArray{{item.fId}}" value="{{item.fId}}" checked/>
+                                            <span>{{item.name}}</span>
+                                        </label>
+                                </template>
+                            </div>
+                        </div>
+                    </stv-form-box>
+                    <stv-form-box>
+                        <div class="header horizontal layout flex">
+                            <div>Tissue</div>
+                            <div class="flex"></div>
+                            <div on-click="selectAll" title="Deselect all tissues">
+                                <i class="fa fa-check-square-o check" name="tissue"></i>
+                            </div>
+                            <div on-click="deSelectAll" title="Select all tissues">
+                                <i class="fa fa-square-o check" name="tissue"></i>
+                            </div>
+                        </div>
+                        <div class="container">
+                            <div id="tissue_div">
+                                <template is="dom-repeat" items="{{tissues}}">
+                                    <label class="stv-control">
+                                        <input type="checkbox" name="tissue" id="tissue{{item.fId}}" value="{{item.fId}}" checked/>
+                                        <span>{{item.name}}</span>
+                                    </label>
+                                </template>
+                            </div>
+                        </div>
+                    </stv-form-box>
+                    <stv-form-box>
+                        <div class="header horizontal layout flex">
+                            <div>Gender</div>
+                            <div class="flex"></div>
+                            <div on-click="selectAll" title="Deselect all genders">
+                                <i class="fa fa-check-square-o check" name="gender"></i>
+                            </div>
+                            <div on-click="deSelectAll" title="Select all genders">
+                                <i class="fa fa-square-o check" name="gender"></i>
+                            </div>
+                        </div>
+                        <div class="container">
+                            <div id="gender_div">
+                                <template is="dom-repeat" items="{{genders}}">
+                                <label class="stv-control">
+                                    <input type="checkbox" name="gender" id="{{item.fId}}" value="{{item.fId}}" checked/>
+                                    <span>{{item.name}}</span>
+                                </label>
+                                </template>
+                            </div>
+                        </div>
+                    </stv-form-box>
+
+
+                    <stv-form-box >
+                        <div class="header">
+                            Sample age
+                        </div>
+                        <div class="container horizontal layout">
+                            <div>
+                                <input type="number" min="0"  max="130" class="stv" id="ageMin" name="ageMin" placeholder="0"  maxlength="3" size="4">
+                            </div>
+                            <div> &nbsp; - &nbsp;</div>
+                            <div>
+                                <input type="number" min="0" max="130" class="stv" id="ageMax" name="ageMax"  placeholder="99"  maxlength="3" size="4">
+                            </div>
+                        </div>
+                    </stv-form-box>
+                </form>
+            </div>
+            <div id="methylationDiv" class="vertical layout">
+                <stv-table id="methylationTable" enable-loading enable-paging enable-remote enable-select enable-resize request="{{request}}" columns="{{columns}}" on-rowclick="handleRowClick">
+                    <div class="custom-buttons horizontal layout">
+                    </div>
+                </stv-table>
+
+                <div id="menu" class="color-2 color-hover-2 horizontal layout">
+                    <div on-click="handleMenuClick" id="menuGV" data-option="gv" selected="">Genomic variants</div>
+                    <div on-click="handleMenuClick" id="menuMET" data-option="methylation">Methylation</div>
+                </div>
+
+                <div id="tools" class="horizontal layout flex">
+                    <csvs-methylation-genomic-variant id="gv" class="tool" ></csvs-methylation-genomic-variant>
+                    <!--csvs-variant-methylation id="methylation" hidden  class="tool"></csvs-variant-methylation-->
+                    <csvs-methylation-graphic-element id="methylation" hidden  class="tool"></csvs-methylation-graphic-element>
+                </div>
+            </div>
+        </div>
+    </template>
+</dom-module>
+<script>
+    Polymer({
+        is: 'csvs-methylation-element',
+        properties: {
+            columns: {
+                type: Array,
+                value: function() {
+                    return [];
+                },
+            },
+            filters: {
+                type: Array,
+                value: [],
+                observer: 'filtersChanged'
+            },
+            diseases:{
+                type: Array,
+                value: []
+            },
+            technologies:{
+                type: Array,
+                value: []
+            },
+            tissues:{
+                type: Array,
+                value: []
+            },
+            genders:{
+                type: Array,
+                value: []
+            },
+            selectedMenuTool: {
+                type: Object,
+                observer: 'selectedMenuChanged'
+            },
+        },
+        filtersChanged: function(){
+            this.diseases = this.getFilters("subpop");
+            this.technologies = this.getFilters("tech");
+            this.tissues = this.getFilters("tissue");
+            this.genders = this.getFilters("gender");
+        },
+
+        getFilters: function(filter){
+            return this.filters.filter(f=> f.filter == filter);
+        },
+
+        ready: function() {
+            this.selectedMenuTool = this.$.menuGV;
+
+            this.columns = [{
+                    name: 'chromosome',
+                    title: "Chr",
+                    disableSort: true,
+                    width: 80
+                }, {
+                    name: 'position',
+                    title: 'Position',
+                    disableSort: true,
+                    width: 120
+                }, {
+                    name: 'genes',
+                    title: 'Gene',
+                    width: 130,
+                    defaultValue: ".",
+                    disableSort: true,
+                    disableTooltip: true,
+                    formula: function(row){
+                        if (row.genes != "" && row.genes != "." && row.genes !=  undefined) {
+                            var genes = row.genes.split(',');
+                            var result=[];
+                            genes.forEach(
+                                function(g) {
+                                    result.push("<a class='link' href='https://www.genecards.org/cgi-bin/carddisp.pl?gene=" + g  +"' target='_blank' " +
+                                        "title=" + g + ">"+g+"</a>");
+                                }
+                            );
+                            return result.join(",");
+                        } else
+                            return row.genes;
+                    }
+                }, {
+                    name: 'methylation',
+                    title: 'Methylation',
+                    width: 400,
+                    columns: [
+                    {
+                            name: 'allSamples',
+                            title: '<span title="Number of samples filtered">Samples <sup><i class="fa fa-info-circle" aria-hidden="true"></i></sup></span>',
+                            width: 100,
+                            disableSort: true,
+                            formula: function(row) {
+                                try {
+                                    return row && row.annots && row.annots && row.annots.samples ? row.annots.samples : "";
+                                } catch (e) {
+                                    return "";
+                                }
+                            }
+                    }, {
+                        name: 'avg',
+                       title: '<span title="Average">Avg <sup><i class="fa fa-info-circle" aria-hidden="true"></i></sup></span>',
+                        width: 150,
+                        disableSort: true,
+                        formula: function(row) {
+                            try {
+                                return row && row.annots  && row.annots.avg ? row.annots.avg.toFixed(3) : "";
+                            } catch (e) {
+                                return "";
+                            }
+                        }
+                    }, {
+                        name: 'stdDev',
+                        title: '<span title="Standard deviation">stdDev <sup><i class="fa fa-info-circle" aria-hidden="true"></i></sup></span>',
+                        width: 150,
+                        disableSort: true,
+                        formula: function(row) {
+                            try {
+                                return row && row.annots  && row.annots.stdDev ? row.annots.stdDev.toFixed(3) : "";
+                            } catch (e) {
+                                return ".";
+                            }
+                        }
+                    }]
+                },
+                 {
+                    name: 'genomicVariants',
+                    title: '<span title="Collaborative Spanish Variant Server">CSVS <sup><i class="fa fa-info-circle aria-hidden="true"></i></sup></span>',
+                    width: 620,
+                    disableSort: true,
+                    columns:[
+                        {
+                        name: 'alleles',
+                        title: 'Alleles',
+                        width: 200,
+                        disableSort: true,
+                        formula: function(row) {
+                            return row.variants != undefined ?
+                                   row.variants.map(r => r.reference + ">" + r.alternate).join("; ") : "" ;
+                        }
+                        },{
+                            name: 'samples',
+                             title: '<span title="Number of samples filtered by the selected subpopulations / Number of all samples. \n\n IMPORTANT: Maybe there are subpopulation in CSVS that no exists in the filter methylation subpopulation (for example controls). You have to deselect all population filter to show all frequencies without restrictions.">Samples / ALL <sup><i class="fa fa-exclamation-triangle" aria-hidden="true" style="color:red"></i></sup></span>',
+                            width: 150,
+                            disableSort: true,
+                            formula: function(row) {
+                                try {
+                                    return row.variants != undefined ?
+                                        row.variants.map(r => (
+                                        row.variantsFiltered != undefined && row.variantsFiltered.findIndex(vf=> vf.reference == r.reference && vf.alternate == r.alternate) != -1
+                                                ? row.variantsFiltered.filter(vf=> vf.reference == r.reference && vf.alternate == r.alternate)[0].stats.totalGts
+
+                                         : "0"
+                                         ) + "/" + row.variants[0].stats.totalGts).join("; ") : "" ;
+                                } catch (e) {
+                                    return "";
+                                }
+                            }
+                        },{
+                            name: "refFreq",
+                            width: 90,
+                            title: '<span title=" 0 Freq: allele frequency for reference (filtered by the selected subpopulations)">0 Freq <sup><i class="fa fa-info-circle aria-hidden="true"></i></sup></span>',
+                            formula: function(row) {
+                                if (row.variantsFiltered != null ) {
+                                    return row.variantsFiltered.map(r => r.stats.refFreq).join("; ")  ;
+                                } else {
+                                    return "";
+                                }
+                            }
+                        }, {
+                            name: "altFreq",
+                            width: 90,
+                            title: '<span title=" 1 Freq: allele frequency for alternative (filtered by the selected subpopulations)">1 Freq <sup><i class="fa fa-info-circle aria-hidden="true"></i></sup></span>',
+                            disableSort: true,
+                            formula: function(row) {
+                                if (row.variantsFiltered != null) {
+                                    return row.variantsFiltered.map(r => r.stats.altFreq).join("; ")  ;
+                                } else {
+                                    return "";
+                                }
+                            }
+                        }, {
+                            name: "maf",
+                            width: 90,
+                            title: '<span title="MAF: Minor Allele Frequency (filtered by the selected subpopulations)">MAF <sup><i class="fa fa-info-circle aria-hidden="true"></i></sup></span>',
+                            disableSort: true,
+                            formula: function(row) {
+                                if (row.variantsFiltered != null ) {
+                                    return row.variantsFiltered.map(r => r.stats.maf).join("; ") ;
+                                } else {
+                                    return "";
+                                }
+                            }
+                        }]
+                }
+            ]
+        },
+
+        getQuery: function(){
+
+        },
+
+        submitForm: function() {
+            var me = this;
+
+            var regionValue = this.$.methFilterPosition.checkRegion();
+            if (regionValue == -1) {
+                return;
+            }
+
+            var geneValue = this.$.methFilterPosition.checkGene();
+
+            var regions = [];
+            if (regionValue != null) {
+                regions = regionValue.split(",");
+            }
+
+            var genes = [];
+            if (geneValue != null) {
+
+                genes = geneValue.split(",");
+                for (var i = 0; i < genes.length; i++) {
+                    genes[i] = genes[i].trim();
+                }
+
+                if (genes.length > 3 && !this.isLogged) {
+                    alert("The maximum number of genes is 3");
+                    return;
+                }
+
+                var gene = genes.join(",").toUpperCase();
+
+                var regionGene = {};
+
+                CellBaseManager.get({
+                    species: 'hsapiens',
+                    category: 'feature',
+                    subCategory: 'gene',
+                    query: gene,
+                    resource: "info",
+                    async: false,
+                    params: {
+                        include: 'name,chromosome,start,end'
+                    },
+                    success: function(data) {
+                        for (var i = 0; i < data.response.length; i++) {
+
+                            var queryResult = data.response[i];
+
+                            if (queryResult.result.length > 0) {
+                                var obj = queryResult.result[0];
+                                var region = new Region(obj);
+                                regionGene[region] = obj.name;
+                                regions.push(region.toString());
+
+                            } else {
+                                alert("Wrong gene: " + genes[i]);
+                            }
+                        }
+                    }
+                });
+            }
+            // Diseases
+            var diseaseEls = this.$.diseases_div.querySelectorAll(".diseaseName");
+            var diseaseIds = [];
+
+            for (var i = 0; i < diseaseEls.length; i++) {
+                var el = diseaseEls[i];
+                if (el.checked) {
+                    diseaseIds.push(el.getAttribute("value"));
+                }
+            }
+
+            // TechnologiesArray
+            var technologyEls = this.$.technologiesArray_div.querySelectorAll("[name=\"technologyArray\"]");
+            var technologyIds = [];
+
+            for (var i = 0; i < technologyEls.length; i++) {
+                var el = technologyEls[i];
+                if (el.checked) {
+                    technologyIds.push(el.getAttribute("value"));
+                }
+            }
+            // Gender
+            var genderEls = this.$.gender_div.querySelectorAll("[name=\"gender\"]");
+            var genderIds = [];
+
+            for (var i = 0; i < genderEls.length; i++) {
+                var el = genderEls[i];
+                if (el.checked) {
+                    genderIds.push(el.getAttribute("value"));
+                }
+            }
+
+            // Tissues
+            var tissueEls = this.$.tissue_div.querySelectorAll("[name=\"tissue\"]");
+            var tissueIds = [];
+
+            for (var i = 0; i < tissueEls.length; i++) {
+                var el = tissueEls[i];
+                if (el.checked) {
+                    tissueIds.push(el.getAttribute("value"));
+                }
+            }
+
+            // Tissues
+            var tissueEls = this.$.tissue_div.querySelectorAll("[name=\"tissue\"]");
+            var tissueIds = [];
+
+            for (var i = 0; i < tissueEls.length; i++) {
+                var el = tissueEls[i];
+                if (el.checked) {
+                    tissueIds.push(el.getAttribute("value"));
+                }
+            }
+
+            // Age
+            var age = this.$.ageMin.value != null ? this.$.ageMin.value : "";
+            if (this.$.ageMax.value != null){
+                age = age + "-" + this.$.ageMax.value;
+            }
+
+            var regionQuery = regions.join(",");
+            var query = {
+                regions: regionQuery,
+                diseases:  diseaseIds.join(","),
+                technologies: technologyIds.join(","),
+                tissues: tissueIds.join(","),
+                genders: genderIds.join(","),
+                age: age,
+                skipCount: false
+                }
+             var url = CSVSManager.methylation.annotation({
+                    query: query,
+                    request: {
+                        url:  true
+                        /*success: function(response) {
+                            var data = response.result[0];
+                            for (var region in regionGene) {
+                                if (data != undefined && region in data) {
+                                    var newKey = regionGene[region];
+                                    data[newKey] = data[region];
+                                    delete data[region];
+                                }
+                            }
+                            try {
+                                this.formURL = url;
+                                me.urlChanged();
+
+                            } catch (e) {
+                                console.log(e);
+                            }
+                        }*/
+                    }
+                });
+            // e -> If event is click check region/gene
+            if (regions.length == 0 && genes.length == 0 ) {
+                new StvDialog().alert("Please add a region/gene.");
+            } else {
+                this.formURL = url;
+                me.urlChanged();
+            }
+        },
+        clearForm: function() {
+            this.$.meth_filter_form.reset();
+            this.$.methFilterPosition.clear();
+
+        },
+
+        _parse: function(response) {
+            var me = this;
+            var data = response.result;
+            var positions = [];
+            var positionsSearch = [];
+            var positionsDoubleVariant = [];
+            var doubleVariant = [];
+            var referencePosition = [];
+            var referenceVariant = [];
+
+            var regions=[];
+            for (var i = 0; i < data.length; i++) {
+                var row = data[i];
+                // Add field to copy when dobleclick
+                data[i].copy = data[i].chromosome + ":" + data[i].position;
+                regions.push(data[i].chromosome + ":" + data[i].position + "-" + data[i].position);
+            }
+            this.updateVariant(data, { regions: regions }, false);
+            this.updateVariant(data, { regions: regions ,
+                                        diseases:  [...this.$.diseases_div.querySelectorAll(".diseaseName")].
+                                                                    filter(e => e.checked).
+                                                                    map(e=>e.getAttribute("value")).join(",")
+                                        }, true);
+
+
+            // Get name genes
+            if (regions.length > 0){
+                CellBaseManager.get({
+                    species: 'hsapiens',
+                    category: 'feature',
+                    subCategory: 'gene',
+                    resource: "search",
+                    async: false,
+                    params: {
+                        include: 'name,chromosome,start,end',
+                        region: regions
+                    },
+                    success: function(dataGene) {
+                        if (dataGene.response != null &&dataGene.response[0] != null && dataGene.response[0].result != null && dataGene.response[0].result.length > 0) {
+                            for (var i = 0; i < data.length; i++) {
+                                // Update rows gene
+                                for (var j = 0; j < dataGene.response[0].result.length; j++) {
+                                    var queryResult = dataGene.response[0].result[j];
+
+                                    if (data[i].chromosome == queryResult.chromosome &&
+                                           data[i].position >= queryResult.start &&
+                                            data[i].position <= queryResult.end){
+                                        data[i].genes = data[i].genes != undefined ? data[i].genes + "," + queryResult.name:
+                                            queryResult.name;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            return data;
+        },
+        _parseTotal: function(response) {
+            if (response != null) {
+                var total = response.numTotalResults;
+            } else {
+                total = 0;
+            }
+            return total;
+        },
+
+        _selectElem: function(response){
+            if (response != null && response.result.length > 0 ){
+                this.$.methylationTable.selectElem(response.result[0], function(x, y, graphic) {
+                        return x.idPgs == y.idPgs;
+                    });
+                this.$.gv.removeAttribute('hidden');
+                //this.$.methylation.setAttribute('hidden', '');
+                //this.$.methylation.removeAttribute('hidden');
+                this.selectedRow(response.result[0]);
+            } else {
+                this.$.methylation.setAttribute('hidden', '');
+                this.$.methylation.isEmpty = true;
+                this.$.gv.isEmpty = true;
+                this.$.gv.removeAttribute('hidden');
+            }
+        },
+
+        updateVariant(data, query, isFiltered){
+             CSVSManager.variants.fetch({
+                query: query,
+                  request: {
+                    async: false,
+                    success: function(dataVariants) {
+                         if (dataVariants.result != null && dataVariants.result.length > 0) {
+                                for (var i = 0; i < data.length; i++) {
+                                    for (var j = 0; j < dataVariants.result.length; j++) {
+                                        var queryResult = dataVariants.result[j];
+
+                                        if (data[i].chromosome == queryResult.chromosome &&
+                                               data[i].position == queryResult.position) {
+                                                var newVariant = Object.assign({}, queryResult);
+                                                if (isFiltered){
+                                                    if (data[i].variantsFiltered != undefined){
+                                                        data[i].variantsFiltered.push(newVariant)
+                                                    } else {
+                                                        data[i].variantsFiltered = [newVariant];
+                                                    }
+                                                } else {
+                                                    if (data[i].variants != undefined){
+                                                        data[i].variants.push(newVariant)
+                                                    } else {
+                                                        data[i].variants = [newVariant];
+                                                    }
+                                                }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        error:function(r){
+                            console.log("error in save");
+                        }
+                    },
+                });
+        },
+
+        urlChanged: function() {
+            var me = this;
+            this.request = {
+                url: this.formURL,
+                auxTotalCount: -1,
+                parse: function(response) {
+                    return me._parse(response);
+                },
+                parseTotal: function(response) {
+                    var total = me._parseTotal(response);
+                    me.numTotalResults = total;
+
+                    if (this.auxTotalCount == -1) {
+                        this.auxTotalCount = total;
+                    } else {
+                        me.numTotalResults = this.auxTotalCount;
+                        total = me.numTotalResults;
+                    }
+
+                    me.set('numTotalResults', -1);
+                    me.set('numTotalResults', total);
+                    return total;
+                },
+                selectElem: function(response){
+                    return me._selectElem(response);
+                }
+            };
+            console.log(this.request);
+        },
+
+        handleRowClick: function(e) {
+            this.selectedRow(e.detail.row);
+        },
+
+        selectedRow: function(row){
+            me = this;
+            if (row.variantsFiltered == undefined || row.variantsFiltered.length == 0){
+                this.$.menuGV.hidden = true;
+                this.$.gv.hidden = true;
+                this.selectedMenuTool = this.$.menuMET;
+                this.$.gv.isEmpty = true;
+                this.$.methylation.hidden = false;
+            } else {
+                this.$.menuGV.hidden = false;
+                this.$.gv.hidden = false;
+                this.selectedMenuTool = this.$.menuGV;
+                this.$.gv.isEmpty = false;
+            }
+            this.$.methylation.filters = {
+                diseases:  [...this.$.diseases_div.querySelectorAll(".diseaseName")].filter(e => e.checked).map(e=>e.getAttribute("value")).join(","),
+                technologies: [...this.$.technologiesArray_div.querySelectorAll("[name=\"technologyArray\"]")].filter(e => e.checked).map(e=>e.getAttribute("value")).join(","),
+                genders: [...this.$.gender_div.querySelectorAll("[name=\"gender\"]")].filter(e => e.checked).map(e=>e.getAttribute("value")).join(","),
+                tissues: [...this.$.tissue_div.querySelectorAll("[name=\"tissue\"]")].filter(e => e.checked).map(e=>e.getAttribute("value")).join(","),
+                age: this.$.ageMin.value + "-" + this.$.ageMax.value
+            };
+            this.$.methylation.data = row;
+
+            // Diseases variants
+            var diseaseEls = this.$.diseases_div.querySelectorAll(".diseaseName");
+            var diseaseIds = [];
+
+            for (var i = 0; i < diseaseEls.length; i++) {
+                var el = diseaseEls[i];
+                if (el.checked) {
+                    diseaseIds.push(el.getAttribute("value"));
+                }
+            }
+             var query = {
+                regions: row.chromosome+":"+row.position+"-"+row.position,
+                diseases:  diseaseIds.join(","),
+                skipCount:  false
+            };
+
+            var url = CSVSManager.variants.fetch({
+                        query: query,
+                        request: {
+                            url: true
+                        }
+                    });
+
+            if (row.variantsFiltered != undefined){
+                me.$.gv.$.dataTableGenomicVariant.data = CSVSSearchParse._parse({
+                                        result: row.variantsFiltered,
+                                        queryOptions:{
+                                            diseases: diseaseIds.join(",")
+                                        }
+                                        });
+            } else {
+                me.$.gv.$.dataTableGenomicVariant.data = [];
+            }
+        },
+
+        handleMenuClick: function(e) {
+            this.selectedMenuTool = e.currentTarget;
+        },
+        selectedMenuChanged: function(neo, old) {
+            if (old) {
+                old.removeAttribute('selected');
+                this.$[old.dataset.option].setAttribute('hidden', '');
+            }
+            if (neo && !this.hidden) {
+                neo.setAttribute('selected', '');
+                this.$[neo.dataset.option].removeAttribute('hidden');
+            }
+        },
+
+        deSelectAll: function(event) {
+            this.isSelectAll(event, false);
+        },
+        selectAll: function(event) {
+            this.isSelectAll(event, true);
+        },
+
+        isSelectAll: function(e, isChecked){
+            var name = e.target != undefined ? e.target.getAttribute("name") : "";
+            var checkboxes = this.$.meth_filter_form[name];
+            if (checkboxes != null && checkboxes.length  == undefined){
+                checkboxes = [checkboxes];
+            }
+            for (var i = 0; i < checkboxes.length; i++) {
+                if (checkboxes[i].type == "checkbox") {
+                    checkboxes[i].checked = isChecked;
+                }
+            }
+            e.stopPropagation();
+        },
+
+    });
+</script>

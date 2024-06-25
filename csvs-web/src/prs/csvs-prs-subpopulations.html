@@ -39,7 +39,7 @@
                                 <template is="dom-repeat" items="{{diseasesPRS}}">
                                     <template is="dom-if" if="{{item.samples}}">
                                         <label class="stv-control">
-                                            <input type="checkbox" class="diseaseName" name="disease" id="disease{{item.groupId}}" value="{{item.groupId}}" checked$="{{isCheckedDefault(item.groupId)}}" on-click="updateDiseases"/>
+                                            <input type="checkbox" class="diseaseName" name="disease" id="prs_disease{{item.groupId}}" value="{{item.groupId}}" checked$="{{isCheckedDefault(item.groupId)}}" on-click="updateDiseases"/>
                                             <span>{{item.name}}</span>
                                         </label>
                                     </template>

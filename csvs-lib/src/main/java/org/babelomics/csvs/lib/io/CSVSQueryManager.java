@@ -5,7 +5,7 @@ import com.mongodb.Cursor;
 import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.babelomics.csvs.lib.models.*;
-import org.babelomics.csvs.lib.models.prs.PrsGraphic;
+import org.babelomics.csvs.lib.models.prs.PgsGraphic;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.List;
 import java.util.Map.Entry;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
  */
 public class CSVSQueryManager {
 
+    private static final String EMPTY_VALUE = "-";
     final Datastore datastore;
     static final int DECIMAL_POSITIONS = 3;
 
@@ -896,6 +898,380 @@ public class CSVSQueryManager {
         return dc;
     }
 
+
+
+    public Query<Methylation> createQueryMethylation(List<Region> regions ,
+                                            List<String> diseases,  List<String> technologies,
+                                            List<String> tissues, List<String> genders,
+                                                     Integer ageMin, Integer ageMax
+                                            ) {
+        Query<Methylation> query = this.datastore.createQuery(Methylation.class);
+
+        Criteria[] or = new Criteria[regions.size()];
+        int i = 0;
+        for (Region r : regions) {
+            Query<Methylation> auxQuery = this.datastore.createQuery(Methylation.class);
+
+            List<Criteria> and = new ArrayList<>();
+            and.add(auxQuery.criteria("chromosome").equal(r.getChromosome()));
+            and.add(auxQuery.criteria("position").equal(r.getStart()));
+            or[i++] = auxQuery.and(and.toArray(new Criteria[and.size()]));
+        }
+        if (or.length > 0) {
+            query.and(or);
+        }
+
+        if (!diseases.isEmpty()) {
+            if (diseases.contains(EMPTY_VALUE) && !diseases.stream().filter(t -> !t.equals(EMPTY_VALUE)).collect(Collectors.toList()).isEmpty()) {
+                //orTech.add(auxQuery.criteria("t").doesNotExist());
+                query.and(query.or(
+                        query.criteria("d").doesNotExist(),
+                        query.criteria("d").in(diseases.stream().filter(t -> !t.equals(EMPTY_VALUE)).map(t->Integer.parseInt(t)).collect(Collectors.toList()))
+                ));
+            } else {
+                if (diseases.contains(EMPTY_VALUE)) {
+                    query.and(query.criteria("d").doesNotExist());
+                } else {
+                    query.and(query.criteria("d").in(diseases.stream().filter(t -> !t.equals(EMPTY_VALUE)).map(t->Integer.parseInt(t)).collect(Collectors.toList())));
+                }
+            }
+        }
+
+
+        if (!technologies.isEmpty()) {
+            if (technologies.contains(EMPTY_VALUE) && !technologies.stream().filter(t -> !t.equals(EMPTY_VALUE)).collect(Collectors.toList()).isEmpty()) {
+                //orTech.add(auxQuery.criteria("t").doesNotExist());
+                query.and(query.or(
+                        query.criteria("tech").doesNotExist(),
+                        query.criteria("tech").in(technologies.stream().filter(t -> !t.equals(EMPTY_VALUE)).collect(Collectors.toList()))
+                ));
+            } else {
+                if (technologies.contains(EMPTY_VALUE)) {
+                    query.and(query.criteria("tech").doesNotExist());
+                } else {
+                    query.and(query.criteria("tech").in(technologies.stream().filter(t -> !t.equals(EMPTY_VALUE)).collect(Collectors.toList())));
+                }
+            }
+        }
+
+        if (!tissues.isEmpty()) {
+            if (tissues.contains(EMPTY_VALUE) && !tissues.stream().filter(t -> !t.equals(EMPTY_VALUE)).collect(Collectors.toList()).isEmpty()) {
+                query.and(query.or(
+                        query.criteria("tissue").doesNotExist(),
+                        query.criteria("tissue").in(tissues.stream().filter(t -> !t.equals(EMPTY_VALUE)).collect(Collectors.toList()))
+                ));
+            } else {
+                if (tissues.contains(EMPTY_VALUE)) {
+                    query.and(query.criteria("tissue").doesNotExist());
+                } else {
+                    query.and(query.criteria("tissue").in(tissues.stream().filter(t -> !t.equals(EMPTY_VALUE)).collect(Collectors.toList())));
+                }
+            }
+        }
+
+        if (!genders.isEmpty()) {
+            if (genders.contains(EMPTY_VALUE) && !genders.stream().filter(g -> !g.equals(EMPTY_VALUE)).collect(Collectors.toList()).isEmpty()) {
+                query.and(query.or(
+                        query.criteria("gender").doesNotExist(),
+                        query.criteria("gender").in(genders.stream().filter(g -> !g.equals(EMPTY_VALUE)).collect(Collectors.toList()))
+                ));
+            } else {
+                if (genders.contains(EMPTY_VALUE)) {
+                    query.and(query.criteria("gender").doesNotExist());
+                } else {
+                    query.and(query.criteria("gender").in(genders.stream().filter(g -> !g.equals(EMPTY_VALUE)).collect(Collectors.toList())));
+                }
+            }
+        }
+
+        if (ageMin != null) {
+            query.and(query.criteria("age").greaterThanOrEq(ageMin));
+        }
+        if (ageMax != null) {
+            query.and(query.criteria("age").lessThanOrEq(ageMax));
+        }
+        return query;
+    }
+
+
+    public List<MethylationFilter> getMethylationFilter(String filter) {
+        Query<MethylationFilter> query = datastore.createQuery(MethylationFilter.class);
+        if (filter != null && !"".equals(filter)) {
+            query.criteria("filter").equal(filter);
+            query.order("order");
+        }
+        return query.asList();
+    }
+
+    public List<Methylation> getMethylation(List<Region> regions ,
+                List<String> diseases,  List<String> technologies,
+                List<String> tissues, List<String> genders, Integer ageMin, Integer ageMax,
+                Integer skip, Integer limit, boolean skipCount, MutableLong count) {
+
+        List<Methylation> res = new ArrayList<>();
+        Query<Methylation> query = createQueryMethylation(regions, diseases, technologies, tissues, genders, ageMin, ageMax);
+
+        if (skip != null && limit != null & limit != -1) {
+            query.offset(skip).limit(limit);
+        }
+
+        System.out.println(query);
+
+        Iterable<Methylation> aux = query.fetch();
+
+        if (!skipCount) {
+            count.setValue(query.countAll());
+        }
+
+        for (Methylation m : aux) {
+            res.add(m);
+        }
+
+        return res;
+    }
+
+    public List<Methylation> getAnnotationMethylation(List<Region> regions,
+                                                      List<String> diseases, List<String> technologies,
+                                                      List<String> tissues, List<String> genders,
+                                                      Integer ageMin, Integer ageMax,
+                                                      boolean all,
+                                                      Integer skip, Integer limit, boolean skipCount, MutableLong count) {
+        List<Methylation> res = new ArrayList<>();
+        Map<String, Object> result = new HashMap<>();
+        DBObject match = new BasicDBObject();
+        DBObject matchWithoutFilter = new BasicDBObject();
+        List<DBObject> matchList = new ArrayList<>();
+
+        // Reg
+        List<DBObject> objsRegOr = new ArrayList<>();
+        for (Region r : regions) {
+            List<BasicDBObject> objAnd = new ArrayList<BasicDBObject>();
+            objAnd.add(new BasicDBObject ().append("c", r.getChromosome()));
+            objAnd.add(new BasicDBObject ().append("p", new BasicDBObject ("$gte", r.getStart() )));
+            objAnd.add(new BasicDBObject ().append("p" ,new BasicDBObject ("$lte", r.getEnd() )));
+            objsRegOr.add((new BasicDBObject ("$and", objAnd)));
+        }
+        matchList.add(new BasicDBObject ("$or", objsRegOr));
+        matchWithoutFilter = new BasicDBObject ("$or", objsRegOr);
+
+        List<DBObject> subpopulationsOr = new ArrayList<>();
+        if (!diseases.isEmpty()) {
+            if (diseases.contains(EMPTY_VALUE) && !diseases.stream().
+                    filter(t -> !t.equals(EMPTY_VALUE)).
+                    map(t->Integer.parseInt(t)).
+                    collect(Collectors.toList()).isEmpty()) {
+                subpopulationsOr.add(new BasicDBObject ("$or",
+                        new BasicDBObject ().append("d", new BasicDBObject("$exists", false))
+                                .append("d", new BasicDBObject("$in", diseases.stream().
+                                        filter(t -> !t.equals(EMPTY_VALUE)).collect(Collectors.toList())))
+                ));
+            } else {
+                if (diseases.contains(EMPTY_VALUE)) {
+                    subpopulationsOr.add(new BasicDBObject ().append("d", new BasicDBObject("$exists", false)));
+                } else {
+                    subpopulationsOr.add(new BasicDBObject ().append("d", new BasicDBObject("$in",
+                            diseases.stream().
+                                    filter(t -> !t.equals(EMPTY_VALUE)).
+                                    map(t->Integer.parseInt(t))
+                                    .collect(Collectors.toList()))));
+                }
+            }
+        }
+        matchList.addAll(subpopulationsOr);
+
+        List<DBObject> technologiesOr = new ArrayList<>();
+        if (!technologies.isEmpty()) {
+            if (technologies.contains(EMPTY_VALUE) && !technologies.stream().filter(t -> !t.equals(EMPTY_VALUE)).collect(Collectors.toList()).isEmpty()) {
+
+                technologiesOr.add(new BasicDBObject ("$or",
+                        Arrays.asList(
+                                new BasicDBObject ().append("tech", new BasicDBObject("$exists", false)),
+                                new BasicDBObject ().append("tech", new BasicDBObject("$in", technologies.stream().filter(t -> !t.equals(EMPTY_VALUE)).collect(Collectors.toList()))))
+                ));
+            } else {
+                if (technologies.contains(EMPTY_VALUE)) {
+                    technologiesOr.add(new BasicDBObject ().append("tech", new BasicDBObject("$exists", false)));
+                } else {
+                    technologiesOr.add(new BasicDBObject ().append("tech", new BasicDBObject("$in", technologies.stream().filter(t -> !t.equals(EMPTY_VALUE)).collect(Collectors.toList()))));
+                }
+            }
+        }
+        matchList.addAll(technologiesOr);
+
+        List<DBObject> tissuesOr = new ArrayList<>();
+        if (!tissues.isEmpty()) {
+            if (tissues.contains(EMPTY_VALUE) && !tissues.stream().filter(t -> !t.equals(EMPTY_VALUE)).collect(Collectors.toList()).isEmpty()) {
+                tissuesOr.add(new BasicDBObject ("$or",
+                        Arrays.asList(
+                                new BasicDBObject ().append("tissue", new BasicDBObject("$exists", false)),
+                                new BasicDBObject ().append("tissue", new BasicDBObject("$in", tissues.stream().filter(t -> !t.equals(EMPTY_VALUE)).collect(Collectors.toList()))))
+                ));
+            } else {
+                if (tissues.contains(EMPTY_VALUE)) {
+                    tissuesOr.add(new BasicDBObject ().append("tissue", new BasicDBObject("$exists", false)));
+                } else {
+                    tissuesOr.add(new BasicDBObject ().append("tissue", new BasicDBObject("$in", tissues.stream().filter(t -> !t.equals(EMPTY_VALUE)).collect(Collectors.toList()))));
+                }
+            }
+        }
+        matchList.addAll(tissuesOr);
+
+        List<DBObject> genderOr = new ArrayList<>();
+        if (!genders.isEmpty()) {
+            if (genders.contains(EMPTY_VALUE) && !tissues.stream().filter(t -> !t.equals(EMPTY_VALUE)).collect(Collectors.toList()).isEmpty()) {
+
+                genderOr.add(new BasicDBObject ("$or",
+                        Arrays.asList(
+                                new BasicDBObject ().append("gender", new BasicDBObject("$exists", false)),
+                                new BasicDBObject ().append("gender", new BasicDBObject("$in", genders.stream().filter(t -> !t.equals(EMPTY_VALUE)).collect(Collectors.toList()))))
+                ));
+            } else {
+                if (genders.contains(EMPTY_VALUE)) {
+                    genderOr.add(new BasicDBObject ().append("gender", new BasicDBObject("$exists", false)));
+                } else {
+                    genderOr.add(new BasicDBObject ().append("gender", new BasicDBObject("$in", genders.stream().filter(t -> !t.equals(EMPTY_VALUE)).collect(Collectors.toList()))));
+                }
+            }
+        }
+
+        if (ageMin != null) {
+            matchList.add(new BasicDBObject ().append("age", new BasicDBObject("$gte", ageMin)));
+        }
+        if (ageMax != null) {
+            matchList.add(new BasicDBObject ().append("age", new BasicDBObject("$lte", ageMax)));
+        }
+
+        matchList.addAll(genderOr);
+        match.put("$and", matchList);
+
+        List<BasicDBObject> aggList = new ArrayList<>();
+        BasicDBObject group = new BasicDBObject().append("_id",  new BasicDBObject().
+                        append("chromosome", "$c").
+                        append("position", "$p") ).
+                append("stdDev", new BasicDBObject("$stdDevSamp", "$value")).
+                append("avg", new BasicDBObject("$avg", "$value")).
+                append("samples", new BasicDBObject("$sum", 1));
+
+        aggList.add(new BasicDBObject("$match", match));
+        aggList.add(new BasicDBObject("$group", group));
+
+        if (skip != null) {
+            aggList.add(new BasicDBObject("$skip", skip));
+        }
+
+        if (limit != null && limit != -1) {
+            aggList.add(new BasicDBObject("$limit", limit));
+        }
+        System.out.println("List Filter");
+        System.out.println(aggList.toString());
+        Cursor aggregation = datastore.getCollection(Methylation.class).aggregate(aggList, AggregationOptions.builder().outputMode(AggregationOptions.OutputMode.CURSOR).build());
+
+        while (aggregation.hasNext()) {
+            BasicDBObject oObj = (BasicDBObject) aggregation.next();
+            Methylation newMethylation = new Methylation(
+                    (String) ((BasicDBObject)oObj.get("_id")).get("chromosome"),
+                    (Integer) ((BasicDBObject)oObj.get("_id")).get("position")
+            );
+            Map<String, Object> annots = new HashMap<>();
+            annots.put("avg", oObj.get("avg"));
+            annots.put("stdDev", oObj.get("stdDev"));
+            annots.put("samples", oObj.get("samples"));
+            newMethylation.setAnnots(annots);
+            res.add(newMethylation);
+        }
+
+        // Calculate countAll without filter
+        if (!skipCount) {
+            List<BasicDBObject> aggListCountNoFilter = new ArrayList<>();
+            BasicDBObject groupCountNoFilter = new BasicDBObject().append("_id", new BasicDBObject().
+                            append("chromosome", "$c").
+                            append("position", "$p")).
+                    append("allSamples", new BasicDBObject("$sum", 1));
+            aggListCountNoFilter.add(new BasicDBObject("$match", matchWithoutFilter));
+            aggListCountNoFilter.add(new BasicDBObject("$group", groupCountNoFilter));
+            if (skip != null) {
+                aggListCountNoFilter.add(new BasicDBObject("$skip", skip));
+            }
+
+            if (limit != null && limit != -1) {
+                aggListCountNoFilter.add(new BasicDBObject("$limit", limit));
+            }
+
+            Cursor aggregationCountNoFilter = datastore.getCollection(Methylation.class).aggregate(aggListCountNoFilter, AggregationOptions.builder().outputMode(AggregationOptions.OutputMode.CURSOR).build());
+            while (aggregationCountNoFilter.hasNext()) {
+                BasicDBObject oObj = (BasicDBObject) aggregationCountNoFilter.next();
+                String chr = (String) ((BasicDBObject) oObj.get("_id")).get("chromosome");
+                Integer pos = (Integer) ((BasicDBObject) oObj.get("_id")).get("position");
+
+                boolean found = false;
+                for (Methylation r : res) {
+                    if (r.getChromosome().equals(chr) && r.getPosition() == pos) {
+                        r.getAnnots().put("allSamples", oObj.get("allSamples"));
+                        found = true;
+                        continue;
+                    }
+                }
+                // Only return all Samples if all=true
+                if (!found && all){
+                    Methylation newMethylation = new Methylation(
+                            (String) ((BasicDBObject)oObj.get("_id")).get("chromosome"),
+                            (Integer) ((BasicDBObject)oObj.get("_id")).get("position")
+                    );
+                    Map<String, Object> annots = new HashMap<>();
+                    annots.put("allSamples", oObj.get("allSamples"));
+                    newMethylation.setAnnots(annots);
+                    res.add(newMethylation);
+                }
+            }
+
+
+            // Count
+            List<BasicDBObject> aggListCount = new ArrayList<>();
+            BasicDBObject groupCount = new BasicDBObject().append("_id", new BasicDBObject().
+                            append("chromosome", "$c").
+                            append("position", "$p"));
+            BasicDBObject groupSum = new BasicDBObject().append("_id", null).
+                            append("count", new BasicDBObject().append("$sum", 1));
+
+            aggListCount.add(new BasicDBObject("$match", match));
+            aggListCount.add(new BasicDBObject("$group", groupCount));
+            aggListCount.add(new BasicDBObject("$group", groupSum));
+            System.out.println("List Count Sum");
+            System.out.println(aggListCount.toString());
+            Cursor aggregationCount = datastore.getCollection(Methylation.class).aggregate(aggListCount, AggregationOptions.builder().outputMode(AggregationOptions.OutputMode.CURSOR).build());
+            while (aggregationCount.hasNext()) {
+                BasicDBObject oObj = (BasicDBObject) aggregationCount.next();
+                count.setValue( Long.valueOf((Integer) oObj.get("count")));
+            }
+        }
+        return res;
+    }
+
+    private Map<String, Object> calculateMethylation(Region r){
+        Map<String, Object> result = new HashMap<>();
+
+        List<BasicDBObject> aggList = new ArrayList<>();
+        BasicDBObject match = new BasicDBObject().append("c", new BasicDBObject("$eq",  r.getChromosome())).
+                append("p", new BasicDBObject("$eq", r.getStart()));
+        BasicDBObject group = new BasicDBObject().append("_id", null).
+                append("stdDev", new BasicDBObject("$stdDevSamp", "$value")).
+                append("avg", new BasicDBObject("$avg", "$value"));
+
+        aggList.add(new BasicDBObject("$match", match));
+        aggList.add(new BasicDBObject("$group", group));
+
+        Cursor aggregation = datastore.getCollection(Methylation.class).aggregate(aggList, AggregationOptions.builder().outputMode(AggregationOptions.OutputMode.CURSOR).build());
+
+        while (aggregation.hasNext()) {
+            BasicDBObject oObj = (BasicDBObject) aggregation.next();
+            //result.put("methylation", oObj);
+            result = oObj;
+        }
+
+        return result;
+    }
+
+
     private List<String> getChunkIds(Region region) {
         List<String> chunkIds = new LinkedList<>();
 
@@ -1342,14 +1718,14 @@ public class CSVSQueryManager {
 
  /***************** RPS **********************/
 
-    public Iterable<Prs> getPRS(List<String> searchPrsList, List<String> adSourcesList, List<String> adScoresList,
+    public Iterable<Pgs> getPRS(List<String> searchPrsList, List<String> adSourcesList, List<String> adScoresList,
                                 List<String> adLisPsgList,
                                 int skip, int limit, boolean skipCount, MutableLong count) {
-        Query<Prs> query = this.datastore.createQuery(Prs.class);
+        Query<Pgs> query = this.datastore.createQuery(Pgs.class);
 
         Criteria[] or = new Criteria[searchPrsList.size() * 3];
         List<Criteria> and = new ArrayList<>();
-        Query<Prs> auxQuery = this.datastore.createQuery(Prs.class);
+        Query<Pgs> auxQuery = this.datastore.createQuery(Pgs.class);
         int i = 0;
         List<Criteria> orEfos = new ArrayList<>();
         for (String id : searchPrsList) {
@@ -1363,7 +1739,7 @@ public class CSVSQueryManager {
 
         if (adSourcesList != null && !adSourcesList.isEmpty()) {
             List<Criteria> ancestrySources = new ArrayList<>();
-            if (adSourcesList.contains(Prs.NOT_REPORTED)){
+            if (adSourcesList.contains(Pgs.NOT_REPORTED)){
                 ancestrySources.add(auxQuery.criteria("sources").doesNotExist());
             }
             ancestrySources.add(auxQuery.criteria("sources.ancestry").in(adSourcesList));
@@ -1372,7 +1748,7 @@ public class CSVSQueryManager {
 
         if (adScoresList != null && !adScoresList.isEmpty()) {
             List<Criteria> ancestryScores = new ArrayList<>();
-            if (adScoresList.contains(Prs.NOT_REPORTED)){
+            if (adScoresList.contains(Pgs.NOT_REPORTED)){
                 ancestryScores.add(auxQuery.criteria("scores").doesNotExist());
             }
 
@@ -1382,7 +1758,7 @@ public class CSVSQueryManager {
 
         if (adLisPsgList != null && !adLisPsgList.isEmpty()) {
              List<Criteria> ancestryListPgs = new ArrayList<>();
-            if (adLisPsgList.contains(Prs.NOT_REPORTED)){
+            if (adLisPsgList.contains(Pgs.NOT_REPORTED)){
                 ancestryListPgs.add(auxQuery.criteria("listPgs").doesNotExist());
             }
             ancestryListPgs.add(auxQuery.criteria("listPgs.ancestry").in(adLisPsgList));
@@ -1396,7 +1772,7 @@ public class CSVSQueryManager {
         query.offset(skip).limit(limit);
         //}
 
-        Iterable<Prs> aux = query.fetch();
+        Iterable<Pgs> aux = query.fetch();
 
         if (!skipCount) {
             count.setValue(query.countAll());
@@ -1405,16 +1781,16 @@ public class CSVSQueryManager {
         return aux;
     }
 
-    public List<PrsGraphic> getGraphicPRS(String idPgs, String sequencingType, List diseases, MutableLong count) {
-        Query<PrsGraphic> query = this.datastore.createQuery(PrsGraphic.class);
+    public List<PgsGraphic> getGraphicPRS(String idPgs, String sequencingType, List diseases, MutableLong count) {
+        Query<PgsGraphic> query = this.datastore.createQuery(PgsGraphic.class);
         if (idPgs != null) {
             query.and(query.criteria("idPgs").equal(idPgs));
         }
         if (sequencingType != null) {
-            if (PrsGraphic.EXOME.equals(sequencingType)) {
+            if (PgsGraphic.EXOME.equals(sequencingType)) {
                 query.and(query.criteria("exome").exists());
             }
-            if (PrsGraphic.GENOME.equals(sequencingType)) {
+            if (PgsGraphic.GENOME.equals(sequencingType)) {
                 query.and(query.criteria("genome").exists());
             }
         }
@@ -1422,7 +1798,7 @@ public class CSVSQueryManager {
             query.and(query.criteria("gid").in(diseases));
         }
 
-        List<PrsGraphic> aux = query.asList();
+        List<PgsGraphic> aux = query.asList();
         count.setValue(query.countAll());
 
         return aux;
@@ -1437,18 +1813,18 @@ public class CSVSQueryManager {
      */
     public List<String> getAncestries(String ad, MutableLong count) {
         List ancestries = new ArrayList();
-        DBCollection dbCollection= this.datastore.getCollection(Prs.class);
+        DBCollection dbCollection= this.datastore.getCollection(Pgs.class);
 
         if (!ad.isEmpty()) {
             ancestries = (List) dbCollection.distinct(ad + ".ancestry").stream()
                     .sorted().collect(Collectors.toList());
 
             // Add no reported
-            if (!ancestries.contains(Prs.NOT_REPORTED)) {
-                Query<Prs> query = this.datastore.createQuery(Prs.class);
+            if (!ancestries.contains(Pgs.NOT_REPORTED)) {
+                Query<Pgs> query = this.datastore.createQuery(Pgs.class);
                 query.and(query.criteria(ad + ".ancestry").doesNotExist());
                 if (query.fetch().hasNext()) {
-                    ancestries.add(Prs.NOT_REPORTED);
+                    ancestries.add(Pgs.NOT_REPORTED);
                 }
             }
         }
@@ -1458,13 +1834,13 @@ public class CSVSQueryManager {
 
 
     /**
-     * Get list diseases with any prs.
+     * Get list diseases with any pgs.
      * @return
      */
     public List<DiseaseGroup> getAllDiseasePRS() {
         List<DiseaseGroup> dgList = this.getAllDiseaseGroups();
 
-        DBCollection dbCollection= this.datastore.getCollection(PrsGraphic.class);
+        DBCollection dbCollection= this.datastore.getCollection(PgsGraphic.class);
 
         List<String> diseasesIdPRS = (List) dbCollection.distinct("gid").stream().sorted().collect(Collectors.toList());
 
