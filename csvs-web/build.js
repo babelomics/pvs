@@ -13,6 +13,9 @@ var element = "csvs-element";
 var bp = path.join(__dirname, "build");
 var indexHTML = path.join(__dirname, name + '-index.html');
 var buildIndexHTML = path.join(bp, 'index.html');
+var buildManifest = path.join(bp, 'manifest.json');
+var buildHightchart = path.join(bp, 'pattern-fill.js');
+
 var elementHTML = path.join(__dirname, element + '.html');
 var buildElementHTML = path.join(bp, element + '.html');
 
@@ -44,6 +47,8 @@ async.waterfall([
     },
     function (cb) {
         shell.cp('-r', indexHTML, buildIndexHTML);
+        shell.cp('-r', indexHTML, buildManifest);
+        shell.cp('-r', indexHTML, buildHightchart);
         shell.cp('-r', path.join(__dirname, 'conf/'), bp);
         shell.cp('-r', path.join(__dirname, 'images/'), bp);
         shell.cp('-r', path.join(__dirname, 'bower_components', 'stevia-elements', 'fonts'), bp);
