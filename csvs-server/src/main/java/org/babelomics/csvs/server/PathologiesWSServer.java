@@ -55,7 +55,7 @@ public class PathologiesWSServer extends CSVSWSServer {
 
         long start = System.currentTimeMillis();
         List<Variant> listVariants = new ArrayList<>();
-        String[] splits = variants.split("&");
+        String[] splits = variants.split(",");
         for (String v : splits){
             listVariants.add(new Variant(v));
         }

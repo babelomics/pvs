@@ -54,7 +54,7 @@ public class PharmaVariantsWSServer extends CSVSWSServer {
         }
 
         if (variants.length() > 0) {
-            String[] variantsSplits = StringUtils.split(variants,"&");
+            String[] variantsSplits = StringUtils.split(variants,",");
             for (String v : variantsSplits) {
                 variantList.add(new Variant(v));
             }

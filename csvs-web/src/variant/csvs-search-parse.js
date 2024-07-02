@@ -43,7 +43,7 @@ var CSVSSearchParse = {
             }
 
             // Pathopedia
-            var query = positionsSearch.join("&");
+            var query = positionsSearch.join(",");
             if (positionsSearch.length > 0) {
                 CSVSManager.pathologies.fetch({
                     id: query,
@@ -88,7 +88,7 @@ var CSVSSearchParse = {
             }
 
             // Pharma
-            var query = positionsSearch.join("&");
+            var query = positionsSearch.join(",");
             if (positionsSearch.length > 0) {
 
                 var positionsRs = [];
@@ -153,7 +153,7 @@ var CSVSSearchParse = {
             }
 
             // Secondary findings
-            var query = positionsSearch.join("&");
+            var query = positionsSearch.join(",");
             if (positionsSearch.length > 0) {
                 var positionsRs = [];
                 for (var i = 0; i < data.length; i++) {
