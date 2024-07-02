@@ -114,6 +114,8 @@
                 if (tab === 'pgs' || tab === 'methylation' || tab === 'stats'){
                     csvs.setMenu(tab ? tab: "home");
                 }
+                const child = document.getElementById("loadingIni");
+                document.body.removeChild(child);
                 document.head.getElementsByTagName("title")[0].innerHTML = window.TITLE_APP || "Collaborative Spanish Variant Server";
                 document.body.appendChild(csvs);
             });
@@ -145,7 +147,12 @@
             });
         }
     </script>
-
+    <div id="loadingIni" style="font-size: 25px;padding-top: 50px;padding-bottom: 10px; color:#2D4774">
+        <div id="loading-text" style="text-align: center">
+            <i class="fa fa-circle-o-notch fa-spin"></i>
+            <span>Loading ...  <img src='./images/logo_CSVS.png' style="width:20px;"> CSVS </span>
+        </div>
+    </div>
 </body>
 
 </html>
