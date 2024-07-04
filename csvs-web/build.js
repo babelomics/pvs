@@ -13,11 +13,11 @@ var element = "csvs-element";
 var bp = path.join(__dirname, "build");
 var indexHTML = path.join(__dirname, name + '-index.html');
 var buildIndexHTML = path.join(bp, 'index.html');
-var buildManifest = path.join(bp, 'manifest.json');
 var buildHightchart = path.join(bp, 'pattern-fill.js');
 
 var elementHTML = path.join(__dirname, element + '.html');
 var buildElementHTML = path.join(bp, element + '.html');
+
 
 var vulcan = new Vulcanize({
     inlineScripts: true,
@@ -46,8 +46,9 @@ async.waterfall([
         });
     },
     function (cb) {
+        shell.cp('-f', 'manifest.json',  path.join(bp, 'manifest.json'));
+        shell.cp('-f', 'favicon.ico',  path.join(bp, 'favicon.ico'));
         shell.cp('-r', indexHTML, buildIndexHTML);
-        shell.cp('-r', indexHTML, buildManifest);
         shell.cp('-r', indexHTML, buildHightchart);
         shell.cp('-r', path.join(__dirname, 'conf/'), bp);
         shell.cp('-r', path.join(__dirname, 'images/'), bp);
@@ -77,6 +78,8 @@ async.waterfall([
         shell.cp('-r', path.join(__dirname, 'bower_components', 'jsorolla','styles'), path.join(bp, "bower_components","jsorolla"));
         shell.cp('-r', path.join(__dirname, 'bower_components', 'jsorolla','src','lib','components','jso-global.css'), bp);
         shell.cp('-r', path.join(__dirname, 'bower_components', 'jsorolla','src','lib','components','jso-dropdown.css'), bp);
+        shell.cp('-r', path.join(__dirname, 'bower_components', 'jsorolla','src','lib','components','jso-form.css'), bp);
+
         shell.cp('-r', path.join(__dirname, 'bower_components', 'jsorolla','src','lib','components','jso-form.css'), bp);
 
         // fix index.html paths
