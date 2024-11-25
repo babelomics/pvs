@@ -984,12 +984,16 @@ public class CSVSQueryManager {
             }
         }
 
-        if (ageMin != null) {
+        if (ageMin != null && ageMax == null) {
             query.and(query.criteria("age").greaterThanOrEq(ageMin));
         }
-        if (ageMax != null) {
+        if (ageMin == null && ageMax != null) {
             query.and(query.criteria("age").lessThanOrEq(ageMax));
         }
+        if (ageMin != null && ageMax != null) {
+            query.criteria("age").greaterThanOrEq(ageMin).add(query.criteria("age").lessThanOrEq(ageMax));
+        }
+
         return query;
     }
 
@@ -1134,11 +1138,15 @@ public class CSVSQueryManager {
             }
         }
 
-        if (ageMin != null) {
+        if (ageMin != null && ageMax == null) {
             matchList.add(new BasicDBObject ().append("age", new BasicDBObject("$gte", ageMin)));
         }
-        if (ageMax != null) {
+        if (ageMin == null && ageMax != null) {
             matchList.add(new BasicDBObject ().append("age", new BasicDBObject("$lte", ageMax)));
+        }
+
+        if (ageMin != null && ageMax != null) {
+            matchList.add(new BasicDBObject ().append("age", new BasicDBObject("$gte", ageMin).append("$lte", ageMax)));
         }
 
         matchList.addAll(genderOr);

@@ -119,14 +119,14 @@ public class MethylationWSServer extends CSVSWSServer {
 
         if (age.length() > 1 && age.contains("-")) {
             String[] splits = age.split("-",-1);
-            if (splits != null && splits[0].length() > 0){
+            if (splits != null && splits[0].length() >= 0){
                 try {
                     ageMin = Integer.parseInt(splits[0]);
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
                 }
             }
-            if (splits != null && splits[1].length() > 1){
+            if (splits != null && splits[1].length() >= 0){
                 try {
                     ageMax = Integer.parseInt(splits[1]);
                 } catch (NumberFormatException e) {
@@ -222,14 +222,14 @@ public class MethylationWSServer extends CSVSWSServer {
         }
         if (age.length() > 0) {
             String[] splits = age.split("-",-1);
-            if (splits != null && splits[0].length() > 0){
+            if (splits != null && splits[0].length() >= 0){
                 try {
                     ageMin = Integer.parseInt(splits[0]);
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
                 }
             }
-            if (splits != null && splits[1].length() > 1){
+            if (splits != null && splits[1].length() >= 0){
                 try {
                     ageMax = Integer.parseInt(splits[1]);
                 } catch (NumberFormatException e) {
