@@ -35,6 +35,9 @@
     <template>
 
         <div class="vertical layout center-justified">
+            <div id="titleVariants" class="vertical layout center title csvs-home" style="color:white">
+                Variants
+            </div>
             <div id="chartContainer" class="vertical layout center">
                 <div id="variantsDiseaseContainer" class="chartContainerElement"></div>
                 <div id="samplesDiseaseContainer" class="chartContainerElement"></div>
@@ -42,6 +45,9 @@
             <div id="techChartContainer" class="horizontal layout center flex center-justified">
                 <div id="variantsTechnologyContainer" class="chartContainerElement"></div>
                 <div id="samplesTechnologyContainer" class="chartContainerElement"></div>
+            </div>
+            <div id="titleMethylation" class="vertical layout center title csvs-home" style="color:white">
+                Methylation
             </div>
             <div  class="horizontal layout center-justified">
                 <div id="samplesMethylationContainer" class="chartContainerElement"></div>
@@ -186,16 +192,17 @@
                             //plotShadow: false,
                             borderRadius: 10,
                             //width: 1000,
-                            width: nameElement == "Subpopulation" ? 1000 : null,
+                            width: dataGraphic.length > 4 ? 1000 : 600,
+                            //width: nameElement == "Subpopulation" ? 1000 : null,
                             plotAreaHeight: 200,
-                            height: nameElement == "Subpopulation" ? 750 : null,
+                            height:  dataGraphic.length > 4 ? 500 + dataGraphic.length/2 * 15 : 400,
+                            //height: nameElement == "Subpopulation" ? 750 : null,
                             marginTop:35,
                         },
 
                         title: {
                             text: title
                         },
-
                         plotOptions: {
                             pie: {
                                 colors: this.colors.slice(22),
